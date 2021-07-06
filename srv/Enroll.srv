@@ -1,0 +1,5 @@
+# Request / response service to perform one enrollment for one new user
+
+string 			name 			# Name of the user
+---
+Face[] 			faces			# Faces of the users

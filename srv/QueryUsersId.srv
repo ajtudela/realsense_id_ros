@@ -1,0 +1,6 @@
+# Request / response service to query the device about all enrolled users.
+
+
+---
+uint32 				number_users		# Number of users
+string[] 			users_id			# Id of the users
