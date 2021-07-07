@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0.2)
 project(realsense_id_ros)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+add_compile_options(-std=c++11)
 
 # RealSense ID
 SET(RSID_INCLUDE_DIRS "~/RealSenseID/include")
@@ -42,7 +42,6 @@ add_service_files(
 generate_messages(
   DEPENDENCIES
   std_msgs
-  "realsense_id_ros"
 )
 
 ################################################
@@ -88,8 +87,7 @@ add_executable(${PROJECT_NAME}_node src/realsense_id_ros.cpp src/realsense_id_ro
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-#add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(${PROJECT_NAME}_node ${PROJECT_NAME}_generate_messages_cpp)
+add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
