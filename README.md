@@ -4,7 +4,9 @@
 
 This is a package for using [Intel RealSense ID] (F455 and F450) cameras with ROS. Intel RealSense ID is a facial authentication on-device solution.
 
-It exposes the camera as a ROS node and allows the user to perform authentication and enrollment as ROS services. Other services exposed are removement of users and query the list of ids.
+It exposes the camera as a ROS node and allows the user to perform authentication and enrollment as ROS services. Other services exposed are: removement of users and query the list of ids.
+
+Includes a dynamic reconfigure server paarameter to change the device onboard configuration. 
 
 **Keywords:** ROS, Intel RealSense ID, face recognition
 
@@ -28,22 +30,22 @@ The realsense_id_ros package has been tested under [ROS] Melodic on [Ubuntu] 18.
 Build the Intel RealSense ID SDK as follows:
 
 ```console
-cd $HOME
-git clone https://github.com/IntelRealSense/RealSenseID
-mkdir build && cd build
-cmake .. -DRSID_PREVIEW=1 -DRSID_DEBUG_CONSOLE=ON
-make -j
+$ cd $HOME
+$ git clone https://github.com/IntelRealSense/RealSenseID
+$ mkdir build && cd build
+$ cmake .. -DRSID_PREVIEW=1 -DRSID_DEBUG_CONSOLE=OFF
+$ make -j
 ```
 #### Building
 
 To build from source, clone the latest version from this repository into your catkin workspace and compile the package using
 
 ```console
-cd catkin_workspace/src
-git clone https://github.com/ajtudela/realsense_id_ros.git
-cd ../
-rosdep install --from-paths . --ignore-src
-catkin_make
+$ cd catkin_workspace/src
+$ git clone https://github.com/ajtudela/realsense_id_ros.git
+$ cd ../
+$ rosdep install --from-paths . --ignore-src
+$ catkin_make
 ```
 
 ## Usage
@@ -94,15 +96,37 @@ Camera node to perform facial recognition.
 
 * **`serial_port`** (string, default: "/dev/ttyACM0")
 
-	Will attach to the device with the given serial port. 
+	Will attach to the device with the given serial port.
+
+
+#### Reconfigure Parameters
+
+* **`camera_rotation`** (int, default: "0")
+
+	Enable the algorithm to work with a rotated device.
+
+* **`security_level`** (string, default: "medium")
+
+	Set security level to 'high' to allow no mask suport or to level 'medium' to support masks.
+
+* **`algo_flow`** (string, default: "all")
+
+	Algorithms which will be used during authentication: 'all', 'detection', 'recognition' and 'spoof'.
+
+* **`face_selection_policy`** (string, default: "all")
+
+	Face selection policy to run authentication on 'all' (up to 5) detected faces vs 'single' (closest) face.
+
 
 ## TODO list
 - [ ] Use global dependencies.
 - [ ] Preview snapshot of the faces.
-- [ ] Multiple faces.
+- [x] Multiple faces.
 - [ ] Host mode.
+- [ ] Pair device.
 - [ ] Secure mode.
 - [ ] Option to use authentication loop with published topics.
+- [x] Dynamic reconfigure server
 
 
 [Intel RealSense ID]: https://www.intelrealsense.com/facial-authentication/

@@ -20,6 +20,7 @@
 #include <RealSenseID/AuthenticateStatus.h>
 #include <RealSenseID/EnrollmentCallback.h>
 #include <RealSenseID/EnrollStatus.h>
+#include <RealSenseID/DeviceConfig.h>
 #include <RealSenseID/FacePose.h>
 #include <RealSenseID/FaceRect.h>
 
@@ -30,13 +31,22 @@
 
 class RSAuthenticationCallback: public RealSenseID::AuthenticationCallback{
 	public:
-		std::string userId;
 		std::vector<realsense_id_ros::Face> newFaces;
+
+		void clear(){
+			newFaces.clear();
+			results_ = 0;
+		};
+
+		void setDeviceConfig(RealSenseID::DeviceConfig devConfig){deviceConfig_ = devConfig;};
 
 		void OnResult(const RealSenseID::AuthenticateStatus status, const char* userId) override{
 			if(status == RealSenseID::AuthenticateStatus::Success){
-				this->userId = userId;
-				ROS_INFO_STREAM("[RealSense ID]: Authenticated, userdId = " << userId);
+				if(deviceConfig_.algo_flow == RealSenseID::DeviceConfig::AlgoFlow::SpoofOnly){
+					ROS_INFO("[RealSense ID]: Real face");
+				}else{
+					ROS_INFO_STREAM("[RealSense ID]: Authenticated, userdId = " << userId);
+				}
 			}else if (status == RealSenseID::AuthenticateStatus::Forbidden){
 				ROS_INFO("[RealSense ID]: User is not authenticated");
 			}else if (status == RealSenseID::AuthenticateStatus::Spoof){
@@ -45,10 +55,9 @@ class RSAuthenticationCallback: public RealSenseID::AuthenticationCallback{
 				ROS_INFO_STREAM("[RealSense ID]: " << status);
 			}
 
-			// Clear all detected faces
-			newFaces.clear();
+			if(faces_.size() > results_){
+				auto& face = faces_[results_];
 
-			for(auto& face: faces_){
 				// Create Face msg
 				realsense_id_ros::Face newFace;
 				newFace.face.x = face.x;
@@ -58,9 +67,9 @@ class RSAuthenticationCallback: public RealSenseID::AuthenticationCallback{
 				newFace.label = userId;
 
 				ROS_INFO("[RealSense ID]: Detected face %u,%u %ux%u", face.x, face.y, face.w, face.h);
-
 				newFaces.push_back(newFace);
 			}
+			results_++;
 		}
 
 		void OnHint(const RealSenseID::AuthenticateStatus hint) override{
@@ -72,11 +81,17 @@ class RSAuthenticationCallback: public RealSenseID::AuthenticationCallback{
 		}
 	private:
 		std::vector<RealSenseID::FaceRect> faces_;
+		RealSenseID::DeviceConfig deviceConfig_;
+		size_t results_ = 0;
 };
 
 class RSEnrollmentCallback: public RealSenseID::EnrollmentCallback{
 	public:
 		std::vector<realsense_id_ros::Face> newFaces;
+
+		void clear(){
+			newFaces.clear();
+		};
 
 		void OnResult(const RealSenseID::EnrollStatus status) override{
 			ROS_INFO_STREAM("[RealSense ID]: Result " << status);
@@ -91,9 +106,6 @@ class RSEnrollmentCallback: public RealSenseID::EnrollmentCallback{
 		}
 
 		void OnFaceDetected(const std::vector<RealSenseID::FaceRect>& faces, const unsigned int ts) override{
-			// Clear all detected faces
-			newFaces.clear();
-
 			for(auto& face: faces){
 				// Create Face msg
 				realsense_id_ros::Face newFace;

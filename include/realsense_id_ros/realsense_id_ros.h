@@ -18,16 +18,19 @@
 // RealSense
 #include <RealSenseID/FaceAuthenticator.h>
 #include <RealSenseID/Logging.h>
+#include <RealSenseID/DeviceConfig.h>
 
 // ROS
 #include <ros/ros.h>
 #include <std_srvs/Empty.h>
+#include <dynamic_reconfigure/server.h>
 
 #include "realsense_callbacks.h"
 #include "realsense_id_ros/Authenticate.h"
 #include "realsense_id_ros/Enroll.h"
 #include "realsense_id_ros/RemoveUser.h"
 #include "realsense_id_ros/QueryUsersId.h"
+#include "realsense_id_ros/RealSenseIDParametersConfig.h"
 
 class RealSenseIDROS{
 	public:
@@ -37,12 +40,14 @@ class RealSenseIDROS{
 	private:
 		ros::NodeHandle node_, nodePrivate_;
 		ros::ServiceServer authSrv_, enrollSrv_, removeUserSrv_, removeAllSrv_, queryUsersIdSrv_;
+		dynamic_reconfigure::Server<realsense_id_ros::RealSenseIDParametersConfig> reconfigureSrv_;
 		std::string port_;
 
 		RSAuthenticationCallback authClbk_;
 		RSEnrollmentCallback enrollClbk_;
 		RealSenseID::FaceAuthenticator authenticator_;
-		RealSenseID::SerialConfig config_;
+		RealSenseID::SerialConfig serialConfig_;
+		RealSenseID::DeviceConfig deviceConfig_;
 
 		void getParams();
 		bool authenticateService(realsense_id_ros::Authenticate::Request& req, realsense_id_ros::Authenticate::Response& res);
@@ -51,6 +56,7 @@ class RealSenseIDROS{
 		bool removeAllService(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
 		bool queryUsersIdService(realsense_id_ros::QueryUsersId::Request& req, realsense_id_ros::QueryUsersId::Response& res);
 		void logCallback(RealSenseID::LogLevel level, const char* msg);
+		void reconfigureCallback(realsense_id_ros::RealSenseIDParametersConfig &config, uint32_t level);
 };
 
 #endif

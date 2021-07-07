@@ -26,12 +26,18 @@ RealSenseIDROS::RealSenseIDROS(ros::NodeHandle& node, ros::NodeHandle& node_priv
 	// Set log level
 	RealSenseID::SetLogCallback(boost::bind(&RealSenseIDROS::logCallback, this, _1, _2), RealSenseID::LogLevel::Off, true);
 
-	// Set config and connect
-	config_.port = port_.c_str();
-	auto status = authenticator_.Connect(config_);
+	// Set serial config and connect
+	serialConfig_.port = port_.c_str();
+	auto status = authenticator_.Connect(serialConfig_);
 	if(status != RealSenseID::Status::Ok){
 		ROS_INFO_STREAM("[RealSense ID]: Failed connecting with status " << status);
+	}else{
+		ROS_INFO("[RealSense ID]: Connected to device.");
+		ROS_DEBUG_STREAM("[RealSense ID]: Opening serial port " << port_.c_str());
 	}
+
+	// Set reconfigure srv
+	reconfigureSrv_.setCallback(boost::bind(&RealSenseIDROS::reconfigureCallback, this, _1, _2));
 }
 
 /* Delete all parameteres */
@@ -49,9 +55,62 @@ void RealSenseIDROS::getParams(){
 	nodePrivate_.param<std::string>("serial_port", port_, "/dev/ttyACM0");
 }
 
+/* Dynamic reconfigure callback */
+void RealSenseIDROS::reconfigureCallback(realsense_id_ros::RealSenseIDParametersConfig &config, uint32_t level){
+	ROS_INFO("[RealSense ID]: Reconfigure request for RealSenseID");
+
+	// Change camera rotation
+	if(config.camera_rotation == 0){
+		deviceConfig_.camera_rotation = RealSenseID::DeviceConfig::CameraRotation::Rotation_0_Deg;
+	}else if(config.camera_rotation == 180){
+		deviceConfig_.camera_rotation = RealSenseID::DeviceConfig::CameraRotation::Rotation_180_Deg;
+	}else if(config.camera_rotation == 90){
+		deviceConfig_.camera_rotation = RealSenseID::DeviceConfig::CameraRotation::Rotation_90_deg;
+	}else if(config.camera_rotation == 270){
+		deviceConfig_.camera_rotation = RealSenseID::DeviceConfig::CameraRotation::Rotation_270_deg;
+	}
+	ROS_DEBUG_STREAM("[RealSense ID]: Camera rotation changed to " << config.camera_rotation);
+
+	// Change security level
+	if(config.security_level.find("high") != std::string::npos){
+		deviceConfig_.security_level = RealSenseID::DeviceConfig::SecurityLevel::High;
+	}else if(config.security_level.find("medium") != std::string::npos){
+		deviceConfig_.security_level = RealSenseID::DeviceConfig::SecurityLevel::Medium;
+	}
+	ROS_DEBUG_STREAM("[RealSense ID]: Security level changed to " << config.security_level);
+
+	// Change algorithm flow
+	if(config.algo_flow.find("all") != std::string::npos){
+		deviceConfig_.algo_flow = RealSenseID::DeviceConfig::AlgoFlow::All;
+	}else if(config.algo_flow.find("detection") != std::string::npos){
+		deviceConfig_.algo_flow = RealSenseID::DeviceConfig::AlgoFlow::FaceDetectionOnly;
+	}else if(config.algo_flow.find("spoof") != std::string::npos){
+		deviceConfig_.algo_flow = RealSenseID::DeviceConfig::AlgoFlow::SpoofOnly;
+	}else if(config.algo_flow.find("recognition") != std::string::npos){
+		deviceConfig_.algo_flow = RealSenseID::DeviceConfig::AlgoFlow::RecognitionOnly;
+	}
+	ROS_DEBUG_STREAM("[RealSense ID]: Algorithm flow changed to " << config.algo_flow);
+
+	// Change face selection policy
+	if(config.face_selection_policy.find("single") != std::string::npos){
+		deviceConfig_.face_selection_policy = RealSenseID::DeviceConfig::FaceSelectionPolicy::Single;
+	}else if(config.face_selection_policy.find("all") != std::string::npos){
+		deviceConfig_.face_selection_policy = RealSenseID::DeviceConfig::FaceSelectionPolicy::All;
+	}
+	ROS_DEBUG_STREAM("[RealSense ID]: Face selection policy changed to " << config.face_selection_policy);
+
+	auto status = authenticator_.SetDeviceConfig(deviceConfig_);
+}
+
 /* Perform one authentication */
 bool RealSenseIDROS::authenticateService(realsense_id_ros::Authenticate::Request& req, realsense_id_ros::Authenticate::Response& res){
 	ROS_INFO("[RealSense ID]: Authenticate service request");
+
+	// Send config to callback in any case
+	authClbk_.setDeviceConfig(deviceConfig_);
+
+	// Clear all
+	authClbk_.clear();
 
 	// Authenticate a user
 	auto status = authenticator_.Authenticate(authClbk_);
@@ -66,6 +125,9 @@ bool RealSenseIDROS::authenticateService(realsense_id_ros::Authenticate::Request
 /* Perform one enrollment for one new user */
 bool RealSenseIDROS::enrollService(realsense_id_ros::Enroll::Request& req, realsense_id_ros::Enroll::Response& res){
 	ROS_INFO("[RealSense ID]: Enroll service request");
+
+	// Clear all
+	enrollClbk_.clear();
 
 	// Enroll a user
 	auto status = authenticator_.Enroll(enrollClbk_, req.name.c_str());

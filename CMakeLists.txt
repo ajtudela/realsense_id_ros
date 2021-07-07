@@ -16,6 +16,15 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
   message_generation
+  dynamic_reconfigure
+)
+
+################################################
+## Declare ROS dynamic reconfigure parameters ##
+################################################
+
+generate_dynamic_reconfigure_options(
+    cfg/RealSenseIDParameters.cfg
 )
 
 ################################################

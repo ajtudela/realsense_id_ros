@@ -2,6 +2,11 @@
 Changelog for package realsense_id_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.0.5 (07-07-2020)
+------------------
+* Added dynamic reconfigure server to change device onboard configuration.
+* Added multiple faces authentication.
+
 1.0.0 (06-07-2020)
 ------------------
 * Initial release.
