@@ -5,8 +5,8 @@ project(realsense_id_ros)
 add_compile_options(-std=c++11)
 
 # RealSense ID
-SET(RSID_INCLUDE_DIRS "~/RealSenseID/include")
-SET(RSID_LIBS_DIRS "~/RealSenseID/build/lib")
+SET(RSID_INCLUDE_DIRS "/opt/RealSenseID/include")
+SET(RSID_LIBS_DIRS "/opt/RealSenseID/lib64")
 FIND_LIBRARY(RSID_LIBRARIES rsid ${RSID_LIBS_DIRS})
 
 ## Find catkin macros and libraries

@@ -33,7 +33,7 @@ Build the Intel RealSense ID SDK as follows:
 $ cd $HOME
 $ git clone https://github.com/IntelRealSense/RealSenseID
 $ mkdir build && cd build
-$ cmake .. -DRSID_PREVIEW=1 -DRSID_DEBUG_CONSOLE=OFF
+$ cmake .. -DRSID_PREVIEW=1 -DRSID_DEBUG_CONSOLE=OFF -DRSID_INSTALL=ON
 $ make -j
 ```
 #### Building
@@ -119,7 +119,7 @@ Camera node to perform facial recognition.
 
 
 ## TODO list
-- [ ] Use global dependencies.
+- [x] Use global dependencies.
 - [ ] Preview snapshot of the faces.
 - [x] Multiple faces.
 - [ ] Host mode.

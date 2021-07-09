@@ -2,6 +2,10 @@
 Changelog for package realsense_id_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.0.6 (09-07-2020)
+------------------
+* Added dependencies in /opt/ instead of $HOME by install RealSenseID SDK with latest version of Cmake.
+
 1.0.5 (07-07-2020)
 ------------------
 * Added dynamic reconfigure server to change device onboard configuration.
