@@ -8,11 +8,20 @@
  * All rights reserved.
  *
  */
+
+#include <chrono>
+#include <thread>
+
 #include <boost/bind.hpp>
+
+// OpenCV
+#include <opencv2/core.hpp>
+#include <cv_bridge/cv_bridge.h>
+
 #include "realsense_id_ros/realsense_id_ros.h"
 
 /* Initialize the subscribers, the publishers and the inference engine */
-RealSenseIDROS::RealSenseIDROS(ros::NodeHandle& node, ros::NodeHandle& node_private): node_(node), nodePrivate_(node_private){
+RealSenseIDROS::RealSenseIDROS(ros::NodeHandle& node, ros::NodeHandle& node_private): node_(node), nodePrivate_(node_private), preview_(previewConfig_){
 	// Initialize ROS parameters
 	getParams();
 
@@ -101,6 +110,16 @@ void RealSenseIDROS::reconfigureCallback(realsense_id_ros::RealSenseIDParameters
 	}
 	ROS_DEBUG_STREAM("[RealSense ID]: Face selection policy changed to " << config.face_selection_policy);
 
+	// Change dump mode
+	if(config.dump_mode.find("none") != std::string::npos){
+		deviceConfig_.dump_mode = RealSenseID::DeviceConfig::DumpMode::None;
+	}else if(config.dump_mode.find("cropped") != std::string::npos){
+		deviceConfig_.dump_mode = RealSenseID::DeviceConfig::DumpMode::CroppedFace;
+	}else if(config.dump_mode.find("fullframe") != std::string::npos){
+		deviceConfig_.dump_mode = RealSenseID::DeviceConfig::DumpMode::FullFrame;
+	}
+	ROS_DEBUG_STREAM("[RealSense ID]: Dump mode changed to " << config.dump_mode);
+
 	// Change matcher confidence level
 	if(config.matcher_confidence_level.find("high") != std::string::npos){
 		deviceConfig_.matcher_confidence_level = RealSenseID::DeviceConfig::MatcherConfidenceLevel::High;
@@ -109,9 +128,14 @@ void RealSenseIDROS::reconfigureCallback(realsense_id_ros::RealSenseIDParameters
 	}else if(config.matcher_confidence_level.find("low") != std::string::npos){
 		deviceConfig_.matcher_confidence_level = RealSenseID::DeviceConfig::MatcherConfidenceLevel::Low;
 	}
-	ROS_DEBUG_STREAM("[RealSense ID]: Security level changed to " << config.security_level);
+	ROS_DEBUG_STREAM("[RealSense ID]: Matcher confidence changed to " << config.matcher_confidence_level);
 
 	auto status = authenticator_.SetDeviceConfig(deviceConfig_);
+	if(status != RealSenseID::Status::Ok){
+		ROS_ERROR("[RealSense ID]: Failed to apply device settings!");
+
+		authenticator_.Disconnect();
+	}
 }
 
 /* Perform one authentication */
@@ -126,8 +150,41 @@ bool RealSenseIDROS::authenticateService(realsense_id_ros::Authenticate::Request
 
 	// Authenticate a user
 	auto status = authenticator_.Authenticate(authClbk_);
+
+	// Start preview and wait until sensor is hot
+	preview_.StartPreview(previewClbk_);
+	std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
 	if(status == RealSenseID::Status::Ok){
-		res.faces = authClbk_.newFaces;
+		std::vector<realsense_id_ros::Face> faces = authClbk_.newFaces;
+		cv::Mat cvImage = previewClbk_.fullImage;
+
+		// Continue if faces are detected
+		if(faces.empty()) return false;
+
+		// Rectangles for faces
+		for(int r = 0; r < faces.size(); r++){
+			realsense_id_ros::Rect rc = faces[r].face;
+			std::string label = faces[r].label;
+
+			cv::rectangle(cvImage, cv::Point2f(rc.x-1, rc.y), cv::Point2f(rc.x + 180, rc.y - 22), cv::Scalar(255, 0, 0.0), cv::FILLED, cv::LINE_AA);
+			cv::putText(cvImage, label, cv::Point2f(rc.x, rc.y - 5), cv::FONT_HERSHEY_COMPLEX_SMALL, 1, cv::Scalar(0, 0, 0), 1.5, cv::LINE_AA);
+			cv::rectangle(cvImage, cv::Point2f(rc.x, rc.y), cv::Point2f(rc.x+rc.width, rc.y+rc.height), cv::Scalar(255, 0, 0), 4, cv::LINE_AA);
+		}
+
+		// Convert image to sensor_msgs
+		cv_bridge::CvImage outputImageMsg;
+		sensor_msgs::Image imageMsg;
+		outputImageMsg.header.frame_id = "realsense_id_link";
+		outputImageMsg.header.stamp = ros::Time::now();
+		outputImageMsg.encoding = sensor_msgs::image_encodings::RGB8;
+		outputImageMsg.image = cvImage;
+		outputImageMsg.toImageMsg(imageMsg);
+
+		res.faces = faces;
+		res.source_img = imageMsg;
+		preview_.StopPreview();
+
 		return true;
 	}
 

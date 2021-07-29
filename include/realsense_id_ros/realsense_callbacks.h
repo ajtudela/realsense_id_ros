@@ -15,6 +15,9 @@
 // C++
 #include <string>
 
+// OpenCV
+#include <opencv2/core.hpp>
+
 // RealSense ID
 #include <RealSenseID/AuthenticationCallback.h>
 #include <RealSenseID/AuthenticateStatus.h>
@@ -23,6 +26,7 @@
 #include <RealSenseID/DeviceConfig.h>
 #include <RealSenseID/FacePose.h>
 #include <RealSenseID/FaceRect.h>
+#include <RealSenseID/Preview.h>
 
 // ROS
 #include <ros/ros.h>
@@ -73,7 +77,7 @@ class RSAuthenticationCallback: public RealSenseID::AuthenticationCallback{
 		}
 
 		void OnHint(const RealSenseID::AuthenticateStatus hint) override{
-			ROS_INFO_STREAM("[RealSense ID]: OnHint " << hint);
+			ROS_DEBUG_STREAM("[RealSense ID]: Hint " << hint);
 		}
 
 		void OnFaceDetected(const std::vector<RealSenseID::FaceRect>& faces, const unsigned int ts) override{
@@ -94,15 +98,15 @@ class RSEnrollmentCallback: public RealSenseID::EnrollmentCallback{
 		};
 
 		void OnResult(const RealSenseID::EnrollStatus status) override{
-			ROS_INFO_STREAM("[RealSense ID]: Result " << status);
+			ROS_DEBUG_STREAM("[RealSense ID]: Result " << status);
 		}
 
 		void OnProgress(const RealSenseID::FacePose pose) override{
-			ROS_INFO_STREAM("[RealSense ID]: OnProgress " << pose);
+			ROS_DEBUG_STREAM("[RealSense ID]: Progress " << pose);
 		}
 
 		void OnHint(const RealSenseID::EnrollStatus hint) override{
-			ROS_INFO_STREAM("[RealSense ID]: Hint " << hint);
+			ROS_DEBUG_STREAM("[RealSense ID]: Hint " << hint);
 		}
 
 		void OnFaceDetected(const std::vector<RealSenseID::FaceRect>& faces, const unsigned int ts) override{
@@ -118,6 +122,18 @@ class RSEnrollmentCallback: public RealSenseID::EnrollmentCallback{
 
 				newFaces.push_back(newFace);
 			}
+		}
+};
+
+class RSPreviewCallback: public RealSenseID::PreviewImageReadyCallback{
+	public:
+		cv::Mat fullImage;
+
+		void OnPreviewImageReady(const RealSenseID::Image image){
+			// Convert to CV Mat
+			fullImage = cv::Mat(image.height, image.width, CV_8UC3, image.buffer);
+
+			ROS_DEBUG_STREAM("[RealSense ID]: Preview " << image.width << "x" << image.height << " (" << image.size << "B)");
 		}
 };
 

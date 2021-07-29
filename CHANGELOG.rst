@@ -1,6 +1,11 @@
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Changelog for package realsense_id_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+1.0.8 (29-07-2020)
+------------------
+* Preview image with the faces.
+* Update cfg with dump mode.
+
 1.0.7 (29-07-2020)
 ------------------
 * Rename node to "realsense_id_ros" instead of "realsense_id_ros_node"

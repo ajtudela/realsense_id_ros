@@ -6,7 +6,7 @@ This is a package for using [Intel RealSense ID] (F455 and F450) cameras with RO
 
 It exposes the camera as a ROS node and allows the user to perform authentication and enrollment as ROS services. Other services exposed are: removement of users and query the list of ids.
 
-Includes a dynamic reconfigure server paarameter to change the device onboard configuration. 
+Includes a dynamic reconfigure server parameter to change the device onboard configuration. 
 
 **Keywords:** ROS, Intel RealSense ID, face recognition
 
@@ -65,7 +65,7 @@ Camera node to perform facial recognition.
 
 * **`authenticate`** ([realsense_id_ros/Authenticate])
 
-	Perform one authentication. Returns an array of faces with users id. For example, you can trigger the computation from the console with
+	Perform one authentication. Returns an array of faces with users id and an image of the faces. For example, you can trigger the computation from the console with
 
 		rosservice call /realsense_id_ros_node/authenticate
 
@@ -118,6 +118,10 @@ Camera node to perform facial recognition.
 
 	Face selection policy to run authentication on 'all' (up to 5) detected faces vs 'single' (closest) face.
 
+* **`dump_mode`** (string, default: "none")
+
+	Set mode for dump image: 'none', 'cropped' or 'fullframe'.
+
 * **`matcher_confidence_level`** (string, default: "medium")
 
 	Used in the matcher during authentication, each level means a different set of threshold is used.
@@ -125,7 +129,7 @@ Camera node to perform facial recognition.
 
 ## TODO list
 - [x] Use global dependencies.
-- [ ] Preview snapshot of the faces.
+- [x] Preview snapshot of the faces.
 - [x] Multiple faces.
 - [ ] Host mode.
 - [ ] Pair device.

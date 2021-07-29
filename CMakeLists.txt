@@ -7,12 +7,17 @@ SET(rsid_INCLUDE_DIRS "/opt/RealSenseID/include")
 SET(rsid_LIBS_DIRS "/opt/RealSenseID/lib64")
 FIND_LIBRARY(rsid_LIBRARIES rsid ${rsid_LIBS_DIRS})
 
+# OpenCV
+find_package(OpenCV 3 REQUIRED COMPONENTS core highgui)
+
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
+  sensor_msgs
+  cv_bridge
   message_generation
   dynamic_reconfigure
 )
@@ -48,6 +53,7 @@ add_service_files(
 generate_messages(
   DEPENDENCIES
   std_msgs
+  sensor_msgs
 )
 
 ################################################
@@ -65,7 +71,7 @@ generate_messages(
 ###################################
 catkin_package(
  INCLUDE_DIRS include
- CATKIN_DEPENDS roscpp std_msgs message_runtime
+ CATKIN_DEPENDS roscpp std_msgs cv_bridge message_runtime
 )
 
 ###########
@@ -96,6 +102,7 @@ add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EX
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
   ${rsid_LIBRARIES}
+  ${OpenCV_LIBRARIES}
 )
 
 #############

@@ -2,4 +2,5 @@
 
 
 ---
-Face[] 			faces			# Faces of the users
+Face[] 				faces			# Faces of the users
+sensor_msgs/Image 	source_img		# Image of the authenticated user

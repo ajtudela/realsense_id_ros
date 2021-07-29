@@ -16,9 +16,10 @@
 #include <string>
 
 // RealSense
+#include <RealSenseID/DeviceConfig.h>
 #include <RealSenseID/FaceAuthenticator.h>
 #include <RealSenseID/Logging.h>
-#include <RealSenseID/DeviceConfig.h>
+#include <RealSenseID/Preview.h>
 
 // ROS
 #include <ros/ros.h>
@@ -28,8 +29,8 @@
 #include "realsense_callbacks.h"
 #include "realsense_id_ros/Authenticate.h"
 #include "realsense_id_ros/Enroll.h"
-#include "realsense_id_ros/RemoveUser.h"
 #include "realsense_id_ros/QueryUsersId.h"
+#include "realsense_id_ros/RemoveUser.h"
 #include "realsense_id_ros/RealSenseIDParametersConfig.h"
 
 class RealSenseIDROS{
@@ -45,9 +46,12 @@ class RealSenseIDROS{
 
 		RSAuthenticationCallback authClbk_;
 		RSEnrollmentCallback enrollClbk_;
+		RSPreviewCallback previewClbk_;
 		RealSenseID::FaceAuthenticator authenticator_;
 		RealSenseID::SerialConfig serialConfig_;
 		RealSenseID::DeviceConfig deviceConfig_;
+		RealSenseID::PreviewConfig previewConfig_;
+		RealSenseID::Preview preview_;
 
 		void getParams();
 		bool authenticateService(realsense_id_ros::Authenticate::Request& req, realsense_id_ros::Authenticate::Response& res);
