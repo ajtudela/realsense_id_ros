@@ -71,7 +71,7 @@ Camera node to perform facial recognition.
 
 * **`enroll`** ([realsense_id_ros/Enroll])
 
-	Perform one enrollment for one new user. Returns an array of faces with users id. For example, you can trigger the computation from the console with
+	Perform one enrollment for one new user. Returns an array of faces with image of the faces. For example, you can trigger the computation from the console with
 
 		rosservice call /realsense_id_ros_node/enroll
 

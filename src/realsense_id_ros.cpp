@@ -18,6 +18,10 @@
 #include <opencv2/core.hpp>
 #include <cv_bridge/cv_bridge.h>
 
+// ROS
+#include <vision_msgs/BoundingBox2D.h>
+
+#include "realsense_id_ros/Face.h"
 #include "realsense_id_ros/realsense_id_ros.h"
 
 /* Initialize the subscribers, the publishers and the inference engine */
@@ -155,36 +159,50 @@ bool RealSenseIDROS::authenticateService(realsense_id_ros::Authenticate::Request
 	preview_.StartPreview(previewClbk_);
 	std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
+	// Get timestamps saved in callbacks
+	auto faceDetectionTs = authClbk_.GetLastTimeStamp();
+	auto imagesTs = previewClbk_.GetImagesTimeStamps();
+
 	if(status == RealSenseID::Status::Ok){
-		std::vector<realsense_id_ros::Face> faces = authClbk_.newFaces;
+		std::vector<DetectionObject> detections = authClbk_.GetDetections();
 		cv::Mat cvImage = previewClbk_.fullImage;
 
-		// Continue if faces are detected
-		if(faces.empty()) return false;
-
-		// Rectangles for faces
-		for(int r = 0; r < faces.size(); r++){
-			realsense_id_ros::Rect rc = faces[r].face;
-			std::string label = faces[r].label;
-
-			cv::rectangle(cvImage, cv::Point2f(rc.x-1, rc.y), cv::Point2f(rc.x + 180, rc.y - 22), cv::Scalar(255, 0, 0.0), cv::FILLED, cv::LINE_AA);
-			cv::putText(cvImage, label, cv::Point2f(rc.x, rc.y - 5), cv::FONT_HERSHEY_COMPLEX_SMALL, 1, cv::Scalar(0, 0, 0), 1.5, cv::LINE_AA);
-			cv::rectangle(cvImage, cv::Point2f(rc.x, rc.y), cv::Point2f(rc.x+rc.width, rc.y+rc.height), cv::Scalar(255, 0, 0), 4, cv::LINE_AA);
+		// Exit if no faces are detected
+		if(detections.empty()){
+			preview_.StopPreview();
+			return false;
 		}
 
-		// Convert image to sensor_msgs
-		cv_bridge::CvImage outputImageMsg;
-		sensor_msgs::Image imageMsg;
-		outputImageMsg.header.frame_id = "realsense_id_link";
-		outputImageMsg.header.stamp = ros::Time::now();
-		outputImageMsg.encoding = sensor_msgs::image_encodings::RGB8;
-		outputImageMsg.image = cvImage;
-		outputImageMsg.toImageMsg(imageMsg);
+		// Create face array message
+		std::vector<realsense_id_ros::Face> faces;
+		for(DetectionObject detection: detections){
+			realsense_id_ros::Face face;
+
+			// Header, id and confidence
+			face.header.frame_id = "realsense_id_link";
+			face.header.stamp = ros::Time::now();
+			face.id = detection.id;
+			face.confidence = detection.confidence;
+
+			// 2D bounding box surrounding the object
+			face.bbox.center.x = detection.x + detection.width / 2;
+			face.bbox.center.y = detection.y + detection.height / 2;
+			face.bbox.size_x = detection.width;
+			face.bbox.size_y = detection.height;
+
+			// The 2D data that generated these results
+			cv_bridge::CvImage cvImageBr;
+			cvImageBr.header.frame_id = "realsense_id_link";
+			cvImageBr.header.stamp = ros::Time::now();
+			cvImageBr.encoding = sensor_msgs::image_encodings::RGB8;
+			cvImageBr.image = cvImage;
+			cvImageBr.toImageMsg(face.source_img);
+
+			faces.push_back(face);
+		}
 
 		res.faces = faces;
-		res.source_img = imageMsg;
 		preview_.StopPreview();
-
 		return true;
 	}
 
@@ -199,9 +217,38 @@ bool RealSenseIDROS::enrollService(realsense_id_ros::Enroll::Request& req, reals
 	enrollClbk_.clear();
 
 	// Enroll a user
-	auto status = authenticator_.Enroll(enrollClbk_, req.name.c_str());
+	auto status = authenticator_.Enroll(enrollClbk_, req.id.c_str());
 	if(status == RealSenseID::Status::Ok){
-		res.faces = enrollClbk_.newFaces;
+		std::vector<DetectionObject> detections = enrollClbk_.GetDetections();
+		cv::Mat cvImage = previewClbk_.fullImage;
+
+		// Create face array message
+		std::vector<realsense_id_ros::Face> faces;
+		for(DetectionObject detection: detections){
+			realsense_id_ros::Face face;
+
+			// Header
+			face.header.frame_id = "realsense_id_link";
+			face.header.stamp = ros::Time::now();
+
+			// 2D bounding box surrounding the object
+			face.bbox.center.x = detection.x + detection.width / 2;
+			face.bbox.center.y = detection.y + detection.height / 2;
+			face.bbox.size_x = detection.width;
+			face.bbox.size_y = detection.height;
+
+			// The 2D data that generated these results
+			cv_bridge::CvImage cvImageBr;
+			cvImageBr.header.frame_id = "realsense_id_link";
+			cvImageBr.header.stamp = ros::Time::now();
+			cvImageBr.encoding = sensor_msgs::image_encodings::RGB8;
+			cvImageBr.image = cvImage;
+			cvImageBr.toImageMsg(face.source_img);
+
+			faces.push_back(face);
+		}
+
+		res.faces = faces;
 		return true;
 	}
 

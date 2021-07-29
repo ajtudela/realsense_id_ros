@@ -17,6 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
   sensor_msgs
+  vision_msgs
   cv_bridge
   message_generation
   dynamic_reconfigure
@@ -36,7 +37,6 @@ generate_dynamic_reconfigure_options(
 ## Generate messages in the 'msg' folder
 add_message_files(
   FILES
-  Rect.msg
   Face.msg
 )
 
@@ -54,6 +54,7 @@ generate_messages(
   DEPENDENCIES
   std_msgs
   sensor_msgs
+  vision_msgs
 )
 
 ################################################
@@ -71,7 +72,7 @@ generate_messages(
 ###################################
 catkin_package(
  INCLUDE_DIRS include
- CATKIN_DEPENDS roscpp std_msgs cv_bridge message_runtime
+ CATKIN_DEPENDS roscpp std_msgs sensor_msgs vision_msgs cv_bridge message_runtime
 )
 
 ###########
