@@ -1,6 +1,12 @@
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Changelog for package realsense_id_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+1.0.7 (29-07-2020)
+------------------
+* Rename node to "realsense_id_ros" instead of "realsense_id_ros_node"
+* Update cfg and cpp files to Intel RealSenseID SDK v0.23.0.
+* Update README with the changes. 
+* Added version to mathc en CMakelists.txt.
 
 1.0.6 (09-07-2020)
 ------------------

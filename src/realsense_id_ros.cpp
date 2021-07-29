@@ -65,9 +65,9 @@ void RealSenseIDROS::reconfigureCallback(realsense_id_ros::RealSenseIDParameters
 	}else if(config.camera_rotation == 180){
 		deviceConfig_.camera_rotation = RealSenseID::DeviceConfig::CameraRotation::Rotation_180_Deg;
 	}else if(config.camera_rotation == 90){
-		deviceConfig_.camera_rotation = RealSenseID::DeviceConfig::CameraRotation::Rotation_90_deg;
+		deviceConfig_.camera_rotation = RealSenseID::DeviceConfig::CameraRotation::Rotation_90_Deg;
 	}else if(config.camera_rotation == 270){
-		deviceConfig_.camera_rotation = RealSenseID::DeviceConfig::CameraRotation::Rotation_270_deg;
+		deviceConfig_.camera_rotation = RealSenseID::DeviceConfig::CameraRotation::Rotation_270_Deg;
 	}
 	ROS_DEBUG_STREAM("[RealSense ID]: Camera rotation changed to " << config.camera_rotation);
 
@@ -76,6 +76,8 @@ void RealSenseIDROS::reconfigureCallback(realsense_id_ros::RealSenseIDParameters
 		deviceConfig_.security_level = RealSenseID::DeviceConfig::SecurityLevel::High;
 	}else if(config.security_level.find("medium") != std::string::npos){
 		deviceConfig_.security_level = RealSenseID::DeviceConfig::SecurityLevel::Medium;
+	}else if(config.security_level.find("low") != std::string::npos){
+		deviceConfig_.security_level = RealSenseID::DeviceConfig::SecurityLevel::Low;
 	}
 	ROS_DEBUG_STREAM("[RealSense ID]: Security level changed to " << config.security_level);
 
@@ -98,6 +100,16 @@ void RealSenseIDROS::reconfigureCallback(realsense_id_ros::RealSenseIDParameters
 		deviceConfig_.face_selection_policy = RealSenseID::DeviceConfig::FaceSelectionPolicy::All;
 	}
 	ROS_DEBUG_STREAM("[RealSense ID]: Face selection policy changed to " << config.face_selection_policy);
+
+	// Change matcher confidence level
+	if(config.matcher_confidence_level.find("high") != std::string::npos){
+		deviceConfig_.matcher_confidence_level = RealSenseID::DeviceConfig::MatcherConfidenceLevel::High;
+	}else if(config.matcher_confidence_level.find("medium") != std::string::npos){
+		deviceConfig_.matcher_confidence_level = RealSenseID::DeviceConfig::MatcherConfidenceLevel::Medium;
+	}else if(config.matcher_confidence_level.find("low") != std::string::npos){
+		deviceConfig_.matcher_confidence_level = RealSenseID::DeviceConfig::MatcherConfidenceLevel::Low;
+	}
+	ROS_DEBUG_STREAM("[RealSense ID]: Security level changed to " << config.security_level);
 
 	auto status = authenticator_.SetDeviceConfig(deviceConfig_);
 }
@@ -179,7 +191,7 @@ bool RealSenseIDROS::queryUsersIdService(realsense_id_ros::QueryUsersId::Request
 	// Allocate needed array of user ids
 	char** userIds = new char*[numberOfUsers];
 	for(unsigned i = 0; i < numberOfUsers; i++){
-		userIds[i] = new char[RealSenseID::FaceAuthenticator::MAX_USERID_LENGTH];
+		userIds[i] = new char[RealSenseID::MAX_USERID_LENGTH];
 	}
 	unsigned int numberOfUsersInOut = numberOfUsers;
 	status = authenticator_.QueryUserIds(userIds, numberOfUsersInOut);

@@ -25,7 +25,7 @@ The realsense_id_ros package has been tested under [ROS] Melodic on [Ubuntu] 18.
 #### Dependencies
 
 - [Robot Operating System (ROS)](http://wiki.ros.org) (middleware for robotics),
-- [Intel RealSense ID SDK](https://github.com/IntelRealSense/RealSenseID) 
+- [Intel RealSense ID SDK v0.23](https://github.com/IntelRealSense/RealSenseID) 
 
 Build the Intel RealSense ID SDK as follows:
 
@@ -34,6 +34,7 @@ $ cd $HOME
 $ git clone https://github.com/IntelRealSense/RealSenseID
 $ mkdir build && cd build
 $ cmake .. -DRSID_PREVIEW=1 -DRSID_DEBUG_CONSOLE=OFF -DRSID_INSTALL=ON
+$ sudo make install
 $ make -j
 ```
 #### Building
@@ -116,6 +117,10 @@ Camera node to perform facial recognition.
 * **`face_selection_policy`** (string, default: "all")
 
 	Face selection policy to run authentication on 'all' (up to 5) detected faces vs 'single' (closest) face.
+
+* **`matcher_confidence_level`** (string, default: "medium")
+
+	Used in the matcher during authentication, each level means a different set of threshold is used.
 
 
 ## TODO list
