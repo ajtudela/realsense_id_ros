@@ -1,6 +1,14 @@
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Changelog for package realsense_id_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+1.0.10 (01-08-2020)
+------------------
+* Move callbacks to local scope.
+* Add preview to enroll.
+* Rearrange headers files.
+* Added console log in remove user. 
+* Added support for server mode.
+
 1.0.9 (29-07-2020)
 ------------------
 * Add timestamps.

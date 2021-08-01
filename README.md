@@ -65,25 +65,25 @@ Camera node to perform facial recognition.
 
 * **`authenticate`** ([realsense_id_ros/Authenticate])
 
-	Perform one authentication. Returns an array of faces with users id and an image of the faces. For example, you can trigger the computation from the console with
+	Perform one authentication on the device or on the server. Returns an array of faces with users id and an image of the faces. For example, you can trigger the computation from the console with
 
 		rosservice call /realsense_id_ros_node/authenticate
 
 * **`enroll`** ([realsense_id_ros/Enroll])
 
-	Perform one enrollment for one new user. Returns an array of faces with image of the faces. For example, you can trigger the computation from the console with
+	Perform one enrollment for one new user on the device or on the server. Returns an array of faces with image of the faces. For example, you can trigger the computation from the console with
 
 		rosservice call /realsense_id_ros_node/enroll
 
 * **`remove_user`** ([realsense_id_ros/RemoveUser])
 
-	Remove an user from the device. For example, you can trigger the computation from the console with
+	Remove an user from the device or from the server database. For example, you can trigger the computation from the console with
 
 		rosservice call /realsense_id_ros_node/remove_user
 
 * **`remove_all`** ([std_srvs/Empty])
 
-	Remove all users from the device. For example, you can trigger the computation from the console with
+	Remove all users from the device or from the server database. For example, you can trigger the computation from the console with
 
 		rosservice call /realsense_id_ros_node/remove_all
 
@@ -99,6 +99,9 @@ Camera node to perform facial recognition.
 
 	Will attach to the device with the given serial port.
 
+* **`server_mode`** (bool, default: "false")
+
+	Option to manage a faceprints database on the host or the server.
 
 #### Reconfigure Parameters
 
@@ -131,7 +134,8 @@ Camera node to perform facial recognition.
 - [x] Use global dependencies.
 - [x] Preview snapshot of the faces.
 - [x] Multiple faces.
-- [ ] Host mode.
+- [x] Host mode.
+- [ ] Load and backup of faceprints database.
 - [ ] Pair device.
 - [ ] Secure mode.
 - [ ] Option to use authentication loop with published topics.

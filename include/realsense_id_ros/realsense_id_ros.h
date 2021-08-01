@@ -26,12 +26,12 @@
 #include <std_srvs/Empty.h>
 #include <dynamic_reconfigure/server.h>
 
-#include "realsense_callbacks.h"
 #include "realsense_id_ros/Authenticate.h"
 #include "realsense_id_ros/Enroll.h"
 #include "realsense_id_ros/QueryUsersId.h"
 #include "realsense_id_ros/RemoveUser.h"
 #include "realsense_id_ros/RealSenseIDParametersConfig.h"
+#include "realsense_id_ros/realsense_callbacks.h"
 
 class RealSenseIDROS{
 	public:
@@ -43,10 +43,8 @@ class RealSenseIDROS{
 		ros::ServiceServer authSrv_, enrollSrv_, removeUserSrv_, removeAllSrv_, queryUsersIdSrv_;
 		dynamic_reconfigure::Server<realsense_id_ros::RealSenseIDParametersConfig> reconfigureSrv_;
 		std::string port_;
+		bool serverMode_;
 
-		RSAuthenticationCallback authClbk_;
-		RSEnrollmentCallback enrollClbk_;
-		RSPreviewCallback previewClbk_;
 		RealSenseID::FaceAuthenticator authenticator_;
 		RealSenseID::SerialConfig serialConfig_;
 		RealSenseID::DeviceConfig deviceConfig_;
@@ -54,13 +52,20 @@ class RealSenseIDROS{
 		RealSenseID::Preview preview_;
 
 		void getParams();
+		void logCallback(RealSenseID::LogLevel level, const char* msg);
+		void reconfigureCallback(realsense_id_ros::RealSenseIDParametersConfig &config, uint32_t level);
+
 		bool authenticateService(realsense_id_ros::Authenticate::Request& req, realsense_id_ros::Authenticate::Response& res);
 		bool enrollService(realsense_id_ros::Enroll::Request& req, realsense_id_ros::Enroll::Response& res);
 		bool removeUserService(realsense_id_ros::RemoveUser::Request& req, realsense_id_ros::RemoveUser::Response& res);
 		bool removeAllService(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
 		bool queryUsersIdService(realsense_id_ros::QueryUsersId::Request& req, realsense_id_ros::QueryUsersId::Response& res);
-		void logCallback(RealSenseID::LogLevel level, const char* msg);
-		void reconfigureCallback(realsense_id_ros::RealSenseIDParametersConfig &config, uint32_t level);
+
+		bool authenticateFaceprintsService(realsense_id_ros::Authenticate::Request& req, realsense_id_ros::Authenticate::Response& res);
+		bool enrollFaceprintsService(realsense_id_ros::Enroll::Request& req, realsense_id_ros::Enroll::Response& res);
+		bool removeUserFaceprintService(realsense_id_ros::RemoveUser::Request& req, realsense_id_ros::RemoveUser::Response& res);
+		bool removeAllFaceprintsService(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
+		bool queryUsersIdFaceprintsService(realsense_id_ros::QueryUsersId::Request& req, realsense_id_ros::QueryUsersId::Response& res);
 };
 
 #endif

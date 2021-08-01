@@ -31,11 +31,7 @@
 // ROS
 #include <ros/ros.h>
 
-struct DetectionObject{
-	int x, y, width, height;
-	float confidence;
-	std::string id;
-};
+#include "detectionObject.h"
 
 class RSAuthenticationCallback: public RealSenseID::AuthenticationCallback{
 	public:
@@ -58,9 +54,10 @@ class RSAuthenticationCallback: public RealSenseID::AuthenticationCallback{
 			}else if (status == RealSenseID::AuthenticateStatus::Spoof){
 				ROS_INFO("[RealSense ID]: Spoof");
 			}else{
-				ROS_INFO_STREAM("[RealSense ID]: " << status);
+				ROS_INFO_STREAM("[RealSense ID]: Authenticate " << status);
 			}
 
+			// Check results and add them to objects
 			if(faces_.size() > results_){
 				auto& face = faces_[results_];
 
@@ -108,10 +105,28 @@ class RSEnrollmentCallback: public RealSenseID::EnrollmentCallback{
 	public:
 		void clear(){
 			detections_.clear();
+			results_ = 0;
 		};
 
 		void OnResult(const RealSenseID::EnrollStatus status) override{
 			ROS_DEBUG_STREAM("[RealSense ID]: Result " << status);
+
+			// Check results and add them to objects
+			if(faces_.size() > results_){
+				auto& face = faces_[results_];
+
+				// Create new detection
+				DetectionObject newDetection;
+				newDetection.x = face.x;
+				newDetection.y = face.y;
+				newDetection.width = face.w;
+				newDetection.height = face.h;
+				newDetection.confidence = 0.0;
+				detections_.push_back(newDetection);
+
+				ROS_DEBUG("[RealSense ID]: Detected face %u,%u %ux%u", face.x, face.y, face.w, face.h);
+			}
+			results_++;
 		}
 
 		void OnProgress(const RealSenseID::FacePose pose) override{
@@ -123,17 +138,12 @@ class RSEnrollmentCallback: public RealSenseID::EnrollmentCallback{
 		}
 
 		void OnFaceDetected(const std::vector<RealSenseID::FaceRect>& faces, const unsigned int ts) override{
-			for(auto& face: faces){
-				// Create new detection
-				DetectionObject newDetection;
-				newDetection.x = face.x;
-				newDetection.y = face.y;
-				newDetection.width = face.w;
-				newDetection.height = face.h;
-				detections_.push_back(newDetection);
+			faces_ = faces;
+			ts_ = ts;
+		}
 
-				ROS_DEBUG("[RealSense ID]: Detected face %u,%u %ux%u", face.x, face.y, face.w, face.h);
-			}
+		unsigned int GetLastTimeStamp(){
+			return ts_;
 		}
 
 		const std::vector<DetectionObject>& GetDetections(){
@@ -142,6 +152,9 @@ class RSEnrollmentCallback: public RealSenseID::EnrollmentCallback{
 
 	private:
 		std::vector<DetectionObject> detections_;
+		std::vector<RealSenseID::FaceRect> faces_;
+		size_t results_ = 0;
+		unsigned int ts_ = 0;
 };
 
 class RSPreviewCallback: public RealSenseID::PreviewImageReadyCallback{
