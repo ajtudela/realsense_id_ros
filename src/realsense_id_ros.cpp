@@ -201,7 +201,6 @@ void RealSenseIDROS::authenticateLoop(){
 
 	// Get timestamps saved in callbacks
 	auto faceDetectionTs = authClbk.GetLastTimeStamp();
-	auto imagesTs = previewClbk_.GetImagesTimeStamps();
 
 	if(status == RealSenseID::Status::Ok){
 		std::vector<DetectionObject> detections = authClbk.GetDetections();
@@ -234,7 +233,6 @@ bool RealSenseIDROS::authenticateService(realsense_id_ros::Authenticate::Request
 
 	// Get timestamps saved in callbacks
 	auto faceDetectionTs = authClbk.GetLastTimeStamp();
-	auto imagesTs = previewClbk_.GetImagesTimeStamps();
 
 	if(status == RealSenseID::Status::Ok){
 		std::vector<DetectionObject> detections = authClbk.GetDetections();

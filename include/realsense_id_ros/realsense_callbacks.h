@@ -166,19 +166,7 @@ class RSPreviewCallback: public RealSenseID::PreviewImageReadyCallback{
 			fullImage = cv::Mat(image.height, image.width, CV_8UC3, image.buffer);
 
 			ROS_DEBUG_STREAM("[RealSense ID]: Preview " << image.width << "x" << image.height << " (" << image.size << "B)");
-
-			// Get timestamps
-			imgTimestamp_.push_back(image.metadata.timestamp);
-
-			ROS_DEBUG_STREAM("[RealSense ID]: Timestamp " << image.metadata.timestamp);
 		}
-
-		const std::vector<unsigned int>& GetImagesTimeStamps(){
-			return imgTimestamp_;
-		}
-
-	private: 
-		std::vector<unsigned int> imgTimestamp_;
 };
 
 #endif
