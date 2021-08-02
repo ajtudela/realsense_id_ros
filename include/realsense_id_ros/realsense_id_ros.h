@@ -15,6 +15,9 @@
 // C++
 #include <string>
 
+// OpenCV
+#include <opencv2/core.hpp>
+
 // RealSense
 #include <RealSenseID/DeviceConfig.h>
 #include <RealSenseID/FaceAuthenticator.h>
@@ -37,19 +40,24 @@ class RealSenseIDROS{
 	public:
 		RealSenseIDROS(ros::NodeHandle& node, ros::NodeHandle& node_private);
 		~RealSenseIDROS();
+		void publishImage();
+		void authenticateLoop();
 
 	private:
 		ros::NodeHandle node_, nodePrivate_;
 		ros::ServiceServer authSrv_, enrollSrv_, removeUserSrv_, removeAllSrv_, queryUsersIdSrv_;
+		ros::Publisher imagePub_;
 		dynamic_reconfigure::Server<realsense_id_ros::RealSenseIDParametersConfig> reconfigureSrv_;
 		std::string port_;
-		bool serverMode_;
+		bool serverMode_, authLoopMode_;
+		cv::Mat previewCVImage_;
 
 		RealSenseID::FaceAuthenticator authenticator_;
 		RealSenseID::SerialConfig serialConfig_;
 		RealSenseID::DeviceConfig deviceConfig_;
 		RealSenseID::PreviewConfig previewConfig_;
 		RealSenseID::Preview preview_;
+		RSPreviewCallback previewClbk_;
 
 		void getParams();
 		void logCallback(RealSenseID::LogLevel level, const char* msg);

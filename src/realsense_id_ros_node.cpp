@@ -21,7 +21,11 @@ int main(int argc, char** argv){
 	try{
 		ROS_INFO("[RealSense ID]: Initializing node");
 		RealSenseIDROS realsense(node, node_private);
-		ros::spin();
+		while(ros::ok()){
+			realsense.authenticateLoop();
+			realsense.publishImage();
+			ros::spinOnce();
+		}
 	}catch(const char* s){
 		ROS_FATAL_STREAM("[RealSense ID]: " << s);
 	}catch(...){

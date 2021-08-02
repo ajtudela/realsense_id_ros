@@ -1,6 +1,11 @@
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Changelog for package realsense_id_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+1.0.11 (02-08-2020)
+------------------
+* Added a publisher image.
+* Added authenticate loop mode as a dynamic reconfigure parameter.
+
 1.0.10 (01-08-2020)
 ------------------
 * Move callbacks to local scope.

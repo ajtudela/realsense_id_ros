@@ -4,9 +4,14 @@
 
 This is a package for using [Intel RealSense ID] (F455 and F450) cameras with ROS. Intel RealSense ID is a facial authentication on-device solution.
 
-It exposes the camera as a ROS node and allows the user to perform authentication and enrollment as ROS services. Other services exposed are: removement of users and query the list of ids.
+It exposes the camera as a ROS node that can be configured to allow the user to perform authentication and enrollment in device mode (inside the camera) or in server mode (using a faceprints database) and publishing the preview image.
 
-Includes a dynamic reconfigure server parameter to change the device onboard configuration. 
+Both the authentication and enrollment are exposed as ROS services in device mode and in service mode. Other services exposed are: removement of users and query the list of ids.
+
+Includes a dynamic reconfigure server parameter to change online the device onboard configuration.
+
+Also, the camera can be set to run facial authentication in a loop enabling the parameter in the dynamic reconfigure server.
+
 
 **Keywords:** ROS, Intel RealSense ID, face recognition
 
@@ -60,6 +65,12 @@ To start the camera node in ROS:
 ### realsense_id_ros_node
 
 Camera node to perform facial recognition.
+
+#### Published Topics
+
+* **`image_raw`** ([sensor_msgs/Image])
+
+	Image with the bounding boxes surrounding the detected faces.
 
 #### Services
 
@@ -129,16 +140,20 @@ Camera node to perform facial recognition.
 
 	Used in the matcher during authentication, each level means a different set of threshold is used.
 
+* **`authenticate_loop`** (bool, default: "false")
+
+	Runs authentication in a loop.
+
 
 ## TODO list
 - [x] Use global dependencies.
 - [x] Preview snapshot of the faces.
 - [x] Multiple faces.
 - [x] Host mode.
-- [ ] Load and backup of faceprints database.
+- [ ] Load and backup of faceprints database in a JSON file.
 - [ ] Pair device.
 - [ ] Secure mode.
-- [ ] Option to use authentication loop with published topics.
+- [x] Option to use authentication loop with published topics.
 - [x] Dynamic reconfigure server
 
 
@@ -146,6 +161,7 @@ Camera node to perform facial recognition.
 [Ubuntu]: https://ubuntu.com/
 [ROS]: http://www.ros.org
 [std_srvs/Empty]: http://docs.ros.org/api/std_srvs/html/srv/Empty.html
+[sensor_msgs/Image]: http://docs.ros.org/api/sensor_msgs/html/msg/Image.html
 [realsense_id_ros/Authenticate]: /srv/Authenticate.srv
 [realsense_id_ros/Enroll]: /srv/Enroll.srv
 [realsense_id_ros/RemoveUser]: /srv/RemoveUser.srv
