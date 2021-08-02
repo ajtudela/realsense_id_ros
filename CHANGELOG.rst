@@ -5,6 +5,7 @@ Changelog for package realsense_id_ros
 ------------------
 * Added a publisher image.
 * Added authenticate loop mode as a dynamic reconfigure parameter.
+* Remove preview timestamp.
 
 1.0.10 (01-08-2020)
 ------------------
