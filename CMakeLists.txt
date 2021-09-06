@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0.2)
 project(realsense_id_ros)
 
 # RealSense ID
-find_package(rsid "0.23.0" EXACT REQUIRED PATHS "/opt/RealSenseID/lib64/cmake")
+find_package(rsid "0.25.0" EXACT REQUIRED PATHS "/opt/RealSenseID/lib64/cmake")
 SET(rsid_INCLUDE_DIRS "/opt/RealSenseID/include")
 SET(rsid_LIBS_DIRS "/opt/RealSenseID/lib64")
 FIND_LIBRARY(rsid_LIBRARIES rsid ${rsid_LIBS_DIRS})

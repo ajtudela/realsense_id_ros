@@ -1,13 +1,18 @@
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Changelog for package realsense_id_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-1.0.11 (02-08-2020)
+1.0.12 (06-09-2021)
+------------------
+* Fix dates in changelog ( •_•)
+* Update compatibility with Intel RealSenseID SDK v0.25.0.
+
+1.0.11 (02-08-2021)
 ------------------
 * Added a publisher image.
 * Added authenticate loop mode as a dynamic reconfigure parameter.
 * Remove preview timestamp.
 
-1.0.10 (01-08-2020)
+1.0.10 (01-08-2021)
 ------------------
 * Move callbacks to local scope.
 * Add preview to enroll.
@@ -15,7 +20,7 @@ Changelog for package realsense_id_ros
 * Added console log in remove user. 
 * Added support for server mode.
 
-1.0.9 (29-07-2020)
+1.0.9 (29-07-2021)
 ------------------
 * Add timestamps.
 * Fix noDetected face array issue.
@@ -23,28 +28,28 @@ Changelog for package realsense_id_ros
 * Change Face.msg with vision_msgs BoundingBox;
 * Remove unnecessary Rect.msg.
 
-1.0.8 (29-07-2020)
+1.0.8 (29-07-2021)
 ------------------
 * Preview image with the faces.
 * Update cfg with dump mode.
 
-1.0.7 (29-07-2020)
+1.0.7 (29-07-2021)
 ------------------
 * Rename node to "realsense_id_ros" instead of "realsense_id_ros_node"
 * Update cfg and cpp files to Intel RealSenseID SDK v0.23.0.
 * Update README with the changes. 
 * Added version to match en CMakelists.txt.
 
-1.0.6 (09-07-2020)
+1.0.6 (09-07-2021)
 ------------------
 * Added dependencies in /opt/ instead of $HOME by install RealSenseID SDK with latest version of Cmake.
 
-1.0.5 (07-07-2020)
+1.0.5 (07-07-2021)
 ------------------
 * Added dynamic reconfigure server to change device onboard configuration.
 * Added multiple faces authentication.
 
-1.0.0 (06-07-2020)
+1.0.0 (06-07-2021)
 ------------------
 * Initial release.
 * Create README.md.
