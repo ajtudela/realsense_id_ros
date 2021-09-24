@@ -1,5 +1,8 @@
 # realsense_id_ros
 
+![ROS](https://img.shields.io/badge/ros-melodic-blue?style=for-the-badge&logo=ros&logoColor=white)
+![License](https://img.shields.io/badge/license-Apache%202-blue?style=for-the-badge)
+
 ## Overview
 
 This is a package for using [Intel RealSense ID] (F455 and F450) cameras with ROS. Intel RealSense ID is a facial authentication on-device solution.
@@ -39,8 +42,8 @@ $ cd $HOME
 $ git clone https://github.com/IntelRealSense/RealSenseID
 $ mkdir build && cd build
 $ cmake .. -DRSID_PREVIEW=1 -DRSID_DEBUG_CONSOLE=OFF -DRSID_INSTALL=ON
-$ sudo make install
 $ make -j
+$ sudo make install
 ```
 #### Building
 
