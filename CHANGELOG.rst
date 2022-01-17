@@ -1,6 +1,16 @@
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Changelog for package realsense_id_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+1.1.0 (17-01-2022)
+------------------
+* Add restore to defaults in dynamic reconfigure.
+* Publish id when enrollment.
+* Add status to enroll.
+* Publish array of faces when loop mode is on.
+* Change confidences to 100.
+* Add authentication_loop to launch file.
+
 1.0.12 (06-09-2021)
 ------------------
 * Fix dates in changelog ( •_•)

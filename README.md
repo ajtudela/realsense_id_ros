@@ -71,6 +71,10 @@ Camera node to perform facial recognition.
 
 #### Published Topics
 
+* **`faces`** ([realsense_id_ros/FaceArray])
+
+	Array with the detected faces.
+
 * **`image_raw`** ([sensor_msgs/Image])
 
 	Image with the bounding boxes surrounding the detected faces.
@@ -165,6 +169,7 @@ Camera node to perform facial recognition.
 [ROS]: http://www.ros.org
 [std_srvs/Empty]: http://docs.ros.org/api/std_srvs/html/srv/Empty.html
 [sensor_msgs/Image]: http://docs.ros.org/api/sensor_msgs/html/msg/Image.html
+[realsense_id_ros/FaceArray]: /msg/FaceArray.msg
 [realsense_id_ros/Authenticate]: /srv/Authenticate.srv
 [realsense_id_ros/Enroll]: /srv/Enroll.srv
 [realsense_id_ros/RemoveUser]: /srv/RemoveUser.srv
