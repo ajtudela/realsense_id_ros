@@ -23,7 +23,7 @@
 #include <sensor_msgs/image_encodings.h>
 #include <sensor_msgs/fill_image.h>
 
-#include "realsense_id_ros/Face.h"
+#include "realsense_id_ros/FaceArray.h"
 #include "realsense_id_ros/realsense_id_ros.h"
 #include "realsense_id_ros/realsense_server_callbacks.h"
 
@@ -48,6 +48,7 @@ RealSenseIDROS::RealSenseIDROS(ros::NodeHandle& node, ros::NodeHandle& node_priv
 		queryUsersIdSrv_ = nodePrivate_.advertiseService("query_users_id", &RealSenseIDROS::queryUsersIdFaceprintsService, this);
 	}
 
+	facePub_ = nodePrivate_.advertise<realsense_id_ros::FaceArray>("faces", 1);
 	imagePub_ = nodePrivate_.advertise<sensor_msgs::Image>("image_raw", 1);
 
 	// Set log level
@@ -72,6 +73,9 @@ RealSenseIDROS::RealSenseIDROS(ros::NodeHandle& node, ros::NodeHandle& node_priv
 
 /* Delete all parameteres. */
 RealSenseIDROS::~RealSenseIDROS(){
+	// Cancel
+	authenticator_.Cancel();
+
 	// Disconnect from the device
 	authenticator_.Disconnect();
 
@@ -215,12 +219,41 @@ void RealSenseIDROS::authenticateLoop(){
 	// Get timestamps saved in callbacks
 	auto faceDetectionTs = authClbk.GetLastTimeStamp();
 
+	// Create header of FaceArray
+	realsense_id_ros::FaceArray faceArray;
+	faceArray.header.frame_id = "realsense_id_link";
+	faceArray.header.stamp = ros::Time::now();
+
+	// Detections ...
 	if(status == RealSenseID::Status::Ok){
 		std::vector<DetectionObject> detections = authClbk.GetDetections();
 
 		// Create face array message
-		std::vector<realsense_id_ros::Face> faces;
 		for(DetectionObject detection: detections){
+			realsense_id_ros::Face face;
+
+			// Header, id and confidence
+			face.header.frame_id = "realsense_id_link";
+			face.header.stamp = ros::Time::now();
+			face.id = detection.id;
+			face.confidence = detection.confidence;
+
+			// 2D bounding box surrounding the object
+			face.bbox.center.x = detection.x + detection.width / 2;
+			face.bbox.center.y = detection.y + detection.height / 2;
+			face.bbox.size_x = detection.width;
+			face.bbox.size_y = detection.height;
+
+			// The 2D data that generated these results
+			cv::Mat croppedImage = previewCVImage_(cv::Rect(detection.x, detection.y, detection.width, detection.height));
+			cv_bridge::CvImage cvImageBr;
+			cvImageBr.header.frame_id = "realsense_id_link";
+			cvImageBr.header.stamp = ros::Time::now();
+			cvImageBr.encoding = sensor_msgs::image_encodings::RGB8;
+			cvImageBr.image = croppedImage;
+			cvImageBr.toImageMsg(face.source_img);
+
+			faceArray.faces.push_back(face);
 
 			// Create a rectangle with label
 			cv::rectangle(previewCVImage_, cv::Point2f(detection.x-1, detection.y), cv::Point2f(detection.x + 180, detection.y - 22), cv::Scalar(255, 0, 0), cv::FILLED, cv::LINE_AA);
@@ -228,6 +261,12 @@ void RealSenseIDROS::authenticateLoop(){
 			cv::rectangle(previewCVImage_, cv::Point2f(detection.x, detection.y), cv::Point2f(detection.x + detection.width, detection.y + detection.height), cv::Scalar(255, 0, 0), 4, cv::LINE_AA);
 		}
 	}
+
+	// Publish array of faces
+	facePub_.publish(faceArray);
+
+	// Publish image
+	publishImage();
 }
 
 // -------------------- DEVICE MODE ---------------

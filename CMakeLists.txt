@@ -38,6 +38,7 @@ generate_dynamic_reconfigure_options(
 add_message_files(
   FILES
   Face.msg
+  FaceArray.msg
 )
 
 ## Generate services in the 'srv' folder

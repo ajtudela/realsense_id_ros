@@ -40,13 +40,12 @@ class RealSenseIDROS{
 	public:
 		RealSenseIDROS(ros::NodeHandle& node, ros::NodeHandle& node_private);
 		~RealSenseIDROS();
-		void publishImage();
 		void authenticateLoop();
 
 	private:
 		ros::NodeHandle node_, nodePrivate_;
 		ros::ServiceServer authSrv_, enrollSrv_, removeUserSrv_, removeAllSrv_, queryUsersIdSrv_;
-		ros::Publisher imagePub_;
+		ros::Publisher facePub_, imagePub_;
 		dynamic_reconfigure::Server<realsense_id_ros::RealSenseIDParametersConfig> reconfigureSrv_;
 		realsense_id_ros::RealSenseIDParametersConfig lastConfig_, defaultConfig_;
 		bool setup_;
@@ -65,6 +64,7 @@ class RealSenseIDROS{
 		void getParams();
 		void logCallback(RealSenseID::LogLevel level, const char* msg);
 		void reconfigureCallback(realsense_id_ros::RealSenseIDParametersConfig &config, uint32_t level);
+		void publishImage();
 
 		bool authenticateService(realsense_id_ros::Authenticate::Request& req, realsense_id_ros::Authenticate::Response& res);
 		bool enrollService(realsense_id_ros::Enroll::Request& req, realsense_id_ros::Enroll::Response& res);
