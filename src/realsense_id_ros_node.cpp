@@ -1,7 +1,7 @@
 /*
  * REALSENSE ID CLASS
  *
- * Copyright (c) 2021 Alberto José Tudela Roldán <ajtudela@gmail.com>
+ * Copyright (c) 2021-2022 Alberto José Tudela Roldán <ajtudela@gmail.com>
  * 
  * This file is part of realsense_id_ros project.
  * 

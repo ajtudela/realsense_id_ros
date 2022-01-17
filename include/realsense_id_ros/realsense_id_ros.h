@@ -1,7 +1,7 @@
 /*
  * REALSENSE ID ROS CLASS
  *
- * Copyright (c) 2021 Alberto José Tudela Roldán <ajtudela@gmail.com>
+ * Copyright (c) 2021-2022 Alberto José Tudela Roldán <ajtudela@gmail.com>
  * 
  * This file is part of realsense_id_ros project.
  * 
@@ -48,6 +48,9 @@ class RealSenseIDROS{
 		ros::ServiceServer authSrv_, enrollSrv_, removeUserSrv_, removeAllSrv_, queryUsersIdSrv_;
 		ros::Publisher imagePub_;
 		dynamic_reconfigure::Server<realsense_id_ros::RealSenseIDParametersConfig> reconfigureSrv_;
+		realsense_id_ros::RealSenseIDParametersConfig lastConfig_, defaultConfig_;
+		bool setup_;
+
 		std::string port_;
 		bool serverMode_, authLoopMode_;
 		cv::Mat previewCVImage_;

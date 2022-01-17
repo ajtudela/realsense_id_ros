@@ -1,7 +1,7 @@
 /*
  * REALSENSE ID ROS CLASS
  *
- * Copyright (c) 2021 Alberto José Tudela Roldán <ajtudela@gmail.com>
+ * Copyright (c) 2021-2022 Alberto José Tudela Roldán <ajtudela@gmail.com>
  * 
  * This file is part of realsense_id_ros project.
  * 
@@ -28,7 +28,8 @@
 #include "realsense_id_ros/realsense_server_callbacks.h"
 
 /* Initialize the subscribers and the publishers */
-RealSenseIDROS::RealSenseIDROS(ros::NodeHandle& node, ros::NodeHandle& node_private): node_(node), nodePrivate_(node_private), preview_(previewConfig_){
+RealSenseIDROS::RealSenseIDROS(ros::NodeHandle& node, ros::NodeHandle& node_private): node_(node), nodePrivate_(node_private),
+																				preview_(previewConfig_), setup_(false){
 	// Initialize ROS parameters
 	getParams();
 
@@ -93,6 +94,18 @@ void RealSenseIDROS::getParams(){
 /* Dynamic reconfigure callback. */
 void RealSenseIDROS::reconfigureCallback(realsense_id_ros::RealSenseIDParametersConfig &config, uint32_t level){
 	ROS_INFO("[RealSense ID]: Reconfigure request for RealSenseID");
+	//The first time we're called, we just want to make sure we have the original configuration
+	if(!setup_){
+		lastConfig_ = config;
+		defaultConfig_ = config;
+		setup_ = true;
+		return;
+	}
+
+	if(config.restore_defaults) {
+		config = defaultConfig_;
+		config.restore_defaults = false;
+	}
 
 	// Change camera rotation
 	if(config.camera_rotation == 0){
