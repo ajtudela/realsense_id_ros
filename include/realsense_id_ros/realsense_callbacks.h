@@ -53,8 +53,10 @@ class RSAuthenticationCallback: public RealSenseID::AuthenticationCallback{
 				ROS_INFO("[RealSense ID]: User is not authenticated");
 			}else if (status == RealSenseID::AuthenticateStatus::Spoof){
 				ROS_INFO("[RealSense ID]: Spoof");
+			}else if (status == RealSenseID::AuthenticateStatus::NoFaceDetected){
+				ROS_DEBUG("[RealSense ID]: NoFaceDetected");
 			}else{
-				ROS_INFO_STREAM("[RealSense ID]: Authenticate " << status);
+				ROS_DEBUG_STREAM("[RealSense ID]: Authenticate " << status);
 			}
 
 			// Check results and add them to objects
@@ -109,7 +111,15 @@ class RSEnrollmentCallback: public RealSenseID::EnrollmentCallback{
 		};
 
 		void OnResult(const RealSenseID::EnrollStatus status) override{
-			ROS_DEBUG_STREAM("[RealSense ID]: Result " << status);
+			if(status == RealSenseID::EnrollStatus::Success){
+				ROS_INFO("[RealSense ID]: Real face");
+			}else if (status == RealSenseID::EnrollStatus::Spoof){
+				ROS_INFO("[RealSense ID]: Spoof");
+			}else if (status == RealSenseID::EnrollStatus::NoFaceDetected){
+				ROS_INFO("[RealSense ID]: NoFaceDetected");
+			}else{
+				ROS_DEBUG_STREAM("[RealSense ID]: Result " << status);
+			}
 
 			// Check results and add them to objects
 			if(faces_.size() > results_){
