@@ -305,9 +305,10 @@ bool RealSenseIDROS::enrollService(realsense_id_ros::Enroll::Request& req, reals
 		for(DetectionObject detection: detections){
 			realsense_id_ros::Face face;
 
-			// Header
+			// Header and id
 			face.header.frame_id = "realsense_id_link";
 			face.header.stamp = ros::Time::now();
+			face.id = req.id.c_str();
 
 			// 2D bounding box surrounding the object
 			face.bbox.center.x = detection.x + detection.width / 2;
