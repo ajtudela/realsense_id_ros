@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+<launch>   
+	<node name="realsense_id_ros" pkg="realsense_id_ros" type="realsense_id_ros" output="screen" >
+		<param name="serial_port" 			type="string" 	value="/dev/ttyACM0" />
+		<param name="authenticate_loop" 	type="bool" 	value="false" />
+	</node>
+</launch>

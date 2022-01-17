@@ -29,9 +29,25 @@
 
 /* Initialize the subscribers and the publishers */
 RealSenseIDROS::RealSenseIDROS(ros::NodeHandle& node, ros::NodeHandle& node_private): node_(node), nodePrivate_(node_private),
-																				preview_(previewConfig_), setup_(false){
+																	preview_(previewConfig_), setup_(false), authLoopMode_(false){
 	// Initialize ROS parameters
 	getParams();
+
+	// Set log level
+	RealSenseID::SetLogCallback(boost::bind(&RealSenseIDROS::logCallback, this, _1, _2), RealSenseID::LogLevel::Off, true);
+
+	// Set serial config and connect
+	serialConfig_.port = port_.c_str();
+	auto status = authenticator_.Connect(serialConfig_);
+	if(status != RealSenseID::Status::Ok){
+		ROS_INFO_STREAM("[RealSense ID]: Failed connecting with status " << status);
+	}else{
+		ROS_INFO("[RealSense ID]: Connected to device");
+		ROS_DEBUG_STREAM("[RealSense ID]: Opening serial port " << port_.c_str());
+	}
+
+	// Set reconfigure srv
+	reconfigureSrv_.setCallback(boost::bind(&RealSenseIDROS::reconfigureCallback, this, _1, _2));
 
 	// Initialize publishers and services
 	if(!serverMode_){
@@ -50,22 +66,6 @@ RealSenseIDROS::RealSenseIDROS(ros::NodeHandle& node, ros::NodeHandle& node_priv
 
 	facePub_ = nodePrivate_.advertise<realsense_id_ros::FaceArray>("faces", 1);
 	imagePub_ = nodePrivate_.advertise<sensor_msgs::Image>("image_raw", 1);
-
-	// Set log level
-	RealSenseID::SetLogCallback(boost::bind(&RealSenseIDROS::logCallback, this, _1, _2), RealSenseID::LogLevel::Off, true);
-
-	// Set serial config and connect
-	serialConfig_.port = port_.c_str();
-	auto status = authenticator_.Connect(serialConfig_);
-	if(status != RealSenseID::Status::Ok){
-		ROS_INFO_STREAM("[RealSense ID]: Failed connecting with status " << status);
-	}else{
-		ROS_INFO("[RealSense ID]: Connected to device");
-		ROS_DEBUG_STREAM("[RealSense ID]: Opening serial port " << port_.c_str());
-	}
-
-	// Set reconfigure srv
-	reconfigureSrv_.setCallback(boost::bind(&RealSenseIDROS::reconfigureCallback, this, _1, _2));
 
 	// Start preview
 	preview_.StartPreview(previewClbk_);
@@ -93,6 +93,7 @@ void RealSenseIDROS::getParams(){
 
 	nodePrivate_.param<std::string>("serial_port", port_, "/dev/ttyACM0");
 	nodePrivate_.param<bool>("server_mode", serverMode_, false);
+	nodePrivate_.param<bool>("authenticate_loop", authLoopMode_, false);
 }
 
 /* Dynamic reconfigure callback. */
@@ -173,14 +174,13 @@ void RealSenseIDROS::reconfigureCallback(realsense_id_ros::RealSenseIDParameters
 	}
 	ROS_DEBUG_STREAM("[RealSense ID]: Matcher confidence changed to " << config.matcher_confidence_level);
 
-	// Chaneg authenticate loop
+	// Change authenticate loop
 	authLoopMode_ = config.authenticate_loop;
 	ROS_DEBUG("[RealSense ID]: Authenticate loop changed");
 
 	auto status = authenticator_.SetDeviceConfig(deviceConfig_);
 	if(status != RealSenseID::Status::Ok){
 		ROS_ERROR("[RealSense ID]: Failed to apply device settings!");
-
 		authenticator_.Disconnect();
 	}
 }
