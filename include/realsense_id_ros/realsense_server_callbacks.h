@@ -125,7 +125,7 @@ class RSAuthFaceprintsCallback: public RealSenseID::AuthFaceprintsExtractionCall
 				newDetection.width = face.w;
 				newDetection.height = face.h;
 				newDetection.id = winningIdStr;
-				newDetection.confidence = 0.0;
+				newDetection.confidence = 100.0;
 				detections_.push_back(newDetection);
 
 				ROS_DEBUG("[RealSense ID]: Detected face %u,%u %ux%u", face.x, face.y, face.w, face.h);
@@ -196,7 +196,7 @@ class RSEnrollFaceprintsCallback: public RealSenseID::EnrollFaceprintsExtraction
 					newDetection.y = face.y;
 					newDetection.width = face.w;
 					newDetection.height = face.h;
-					newDetection.confidence = 0.0;
+					newDetection.confidence = 100.0;
 					detections_.push_back(newDetection);
 
 					ROS_DEBUG("[RealSense ID]: Detected face %u,%u %ux%u", face.x, face.y, face.w, face.h);

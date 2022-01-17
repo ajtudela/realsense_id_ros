@@ -70,7 +70,7 @@ class RSAuthenticationCallback: public RealSenseID::AuthenticationCallback{
 				newDetection.width = face.w;
 				newDetection.height = face.h;
 				newDetection.id = userId;
-				newDetection.confidence = 0.0;
+				newDetection.confidence = 100.0;
 				detections_.push_back(newDetection);
 
 				ROS_DEBUG("[RealSense ID]: Detected face %u,%u %ux%u", face.x, face.y, face.w, face.h);
@@ -131,7 +131,7 @@ class RSEnrollmentCallback: public RealSenseID::EnrollmentCallback{
 				newDetection.y = face.y;
 				newDetection.width = face.w;
 				newDetection.height = face.h;
-				newDetection.confidence = 0.0;
+				newDetection.confidence = 100.0;
 				detections_.push_back(newDetection);
 
 				ROS_DEBUG("[RealSense ID]: Detected face %u,%u %ux%u", face.x, face.y, face.w, face.h);
