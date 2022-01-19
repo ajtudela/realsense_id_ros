@@ -49,7 +49,10 @@ RealSenseIDROS::RealSenseIDROS(ros::NodeHandle& node, ros::NodeHandle& node_priv
 	// Set reconfigure srv
 	reconfigureSrv_.setCallback(boost::bind(&RealSenseIDROS::reconfigureCallback, this, _1, _2));
 
-	// Initialize publishers and services
+	// Initialize services
+	getDevInfoSrv_ = nodePrivate_.advertiseService("device_info", &RealSenseIDROS::getDeviceInfo, this);
+	setCameraInfoSrv_ = nodePrivate_.advertiseService("set_camera_info", &RealSenseIDROS::setCameraInfo, this);
+
 	if(!serverMode_){
 		authSrv_ = nodePrivate_.advertiseService("authenticate", &RealSenseIDROS::authenticateService, this);
 		enrollSrv_ = nodePrivate_.advertiseService("enroll", &RealSenseIDROS::enrollService, this);
@@ -64,8 +67,10 @@ RealSenseIDROS::RealSenseIDROS(ros::NodeHandle& node, ros::NodeHandle& node_priv
 		queryUsersIdSrv_ = nodePrivate_.advertiseService("query_users_id", &RealSenseIDROS::queryUsersIdFaceprintsService, this);
 	}
 
+	// And publishers
 	facePub_ = nodePrivate_.advertise<realsense_id_ros::FaceArray>("faces", 1);
 	imagePub_ = nodePrivate_.advertise<sensor_msgs::Image>("image_raw", 1);
+	cameraInfoPub_ = nodePrivate_.advertise<sensor_msgs::CameraInfo>("camera_info", 1);
 
 	// Start preview
 	preview_.StartPreview(previewClbk_);
@@ -202,6 +207,11 @@ void RealSenseIDROS::publishImage(){
 	imagePub_.publish(cvImageBr.toImageMsg());
 }
 
+/* Publish camera info */
+void RealSenseIDROS::publishCameraInfo(){
+	cameraInfoPub_.publish(cameraInfo_);
+}
+
 /* Authenticate loop */
 void RealSenseIDROS::authenticateLoop(){
 	if(!authLoopMode_) return;
@@ -267,6 +277,60 @@ void RealSenseIDROS::authenticateLoop(){
 
 	// Publish image
 	publishImage();
+}
+
+/* Get device info. */
+bool RealSenseIDROS::getDeviceInfo(realsense_id_ros::DeviceInfo::Request& req, realsense_id_ros::DeviceInfo::Response& res){
+	ROS_INFO("[RealSense ID]: Get device info service request");
+
+	RealSenseID::DeviceController deviceController;
+
+	auto connectStatus = deviceController.Connect(serialConfig_);
+	if(connectStatus != RealSenseID::Status::Ok){
+		ROS_INFO_STREAM("[RealSense ID]: Failed connecting to port " << serialConfig_.port << " status:" << connectStatus);
+		return false;
+	}
+
+	std::string firmwareVersion;
+	auto status = deviceController.QueryFirmwareVersion(firmwareVersion);
+	if(status != RealSenseID::Status::Ok){
+		ROS_INFO("[RealSense ID]: Failed getting firmware version!");
+		return false;
+	}
+
+	std::string serialNumber;
+	status = deviceController.QuerySerialNumber(serialNumber);
+	if(status != RealSenseID::Status::Ok){
+		ROS_INFO("[RealSense ID]: Failed getting serial number!");
+		return false;
+	}
+
+	deviceController.Disconnect();
+
+	std::string hostVersion = RealSenseID::Version();
+
+	res.device_name = "Intel Realsense F450 / F455";
+	res.serial_number = serialNumber;
+	res.firmware_version = firmwareVersion;
+	res.host_version = hostVersion;
+
+	return true;
+}
+
+/* Set camera info */
+bool RealSenseIDROS::setCameraInfo(sensor_msgs::SetCameraInfo::Request& req, sensor_msgs::SetCameraInfo::Response& res){
+	ROS_INFO("[RealSense ID]: Set camera info service request");
+
+	cameraInfo_ = req.camera_info;
+
+	if(!node_.ok()){
+		ROS_ERROR("[RealSense ID]: Camera driver not running.");
+		res.status_message = "Camera driver not running.";
+		res.success = false;
+		return false;
+	}
+
+	return true;
 }
 
 // -------------------- DEVICE MODE ---------------
@@ -455,7 +519,7 @@ bool RealSenseIDROS::queryUsersIdService(realsense_id_ros::QueryUsersId::Request
 
 // -------------------- SERVER MODE ---------------
 
-/*Perform one authentication in server mode. */
+/* Perform one authentication in server mode. */
 bool RealSenseIDROS::authenticateFaceprintsService(realsense_id_ros::Authenticate::Request& req, realsense_id_ros::Authenticate::Response& res){
 	ROS_INFO("[RealSense ID]: Authenticate faceprints service request");
 

@@ -23,6 +23,7 @@ int main(int argc, char** argv){
 		RealSenseIDROS realsense(node, node_private);
 		while(ros::ok()){
 			realsense.authenticateLoop();
+			realsense.publishCameraInfo();
 			ros::spinOnce();
 		}
 	}catch(const char* s){

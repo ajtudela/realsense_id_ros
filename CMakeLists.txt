@@ -45,6 +45,7 @@ add_message_files(
 add_service_files(
   FILES
   Authenticate.srv
+  DeviceInfo.srv
   Enroll.srv
   RemoveUser.srv
   QueryUsersId.srv

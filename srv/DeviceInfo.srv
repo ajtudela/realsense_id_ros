@@ -1,0 +1,5 @@
+---
+string device_name
+string serial_number
+string firmware_version
+string host_version

@@ -19,17 +19,22 @@
 #include <opencv2/core.hpp>
 
 // RealSense
+#include <RealSenseID/DeviceController.h>
 #include <RealSenseID/DeviceConfig.h>
 #include <RealSenseID/FaceAuthenticator.h>
 #include <RealSenseID/Logging.h>
 #include <RealSenseID/Preview.h>
+#include <RealSenseID/Version.h>
 
 // ROS
 #include <ros/ros.h>
 #include <std_srvs/Empty.h>
 #include <dynamic_reconfigure/server.h>
+#include <sensor_msgs/CameraInfo.h>
+#include <sensor_msgs/SetCameraInfo.h>
 
 #include "realsense_id_ros/Authenticate.h"
+#include "realsense_id_ros/DeviceInfo.h"
 #include "realsense_id_ros/Enroll.h"
 #include "realsense_id_ros/QueryUsersId.h"
 #include "realsense_id_ros/RemoveUser.h"
@@ -41,16 +46,19 @@ class RealSenseIDROS{
 		RealSenseIDROS(ros::NodeHandle& node, ros::NodeHandle& node_private);
 		~RealSenseIDROS();
 		void authenticateLoop();
+		void publishCameraInfo();
 
 	private:
 		ros::NodeHandle node_, nodePrivate_;
+		ros::Publisher facePub_, imagePub_, cameraInfoPub_;
+		ros::ServiceServer getDevInfoSrv_, setCameraInfoSrv_;
 		ros::ServiceServer authSrv_, enrollSrv_, removeUserSrv_, removeAllSrv_, queryUsersIdSrv_;
-		ros::Publisher facePub_, imagePub_;
 		dynamic_reconfigure::Server<realsense_id_ros::RealSenseIDParametersConfig> reconfigureSrv_;
 		realsense_id_ros::RealSenseIDParametersConfig lastConfig_, defaultConfig_;
 		bool setup_;
+		sensor_msgs::CameraInfo cameraInfo_;
 
-		std::string port_;
+		std::string port_, calibFilename_;
 		bool serverMode_, authLoopMode_;
 		cv::Mat previewCVImage_;
 
@@ -65,6 +73,9 @@ class RealSenseIDROS{
 		void logCallback(RealSenseID::LogLevel level, const char* msg);
 		void reconfigureCallback(realsense_id_ros::RealSenseIDParametersConfig &config, uint32_t level);
 		void publishImage();
+
+		bool getDeviceInfo(realsense_id_ros::DeviceInfo::Request& req, realsense_id_ros::DeviceInfo::Response& res);
+		bool setCameraInfo(sensor_msgs::SetCameraInfo::Request& req, sensor_msgs::SetCameraInfo::Response& res);
 
 		bool authenticateService(realsense_id_ros::Authenticate::Request& req, realsense_id_ros::Authenticate::Response& res);
 		bool enrollService(realsense_id_ros::Enroll::Request& req, realsense_id_ros::Enroll::Response& res);
