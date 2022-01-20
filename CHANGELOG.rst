@@ -2,6 +2,12 @@
 Changelog for package realsense_id_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.2.0 (20-01-2022)
+------------------
+* Add device info service.
+* Update score for server mode.
+* Fix OpenCv assert in preview image.
+
 1.1.0 (17-01-2022)
 ------------------
 * Add restore to defaults in dynamic reconfigure.

@@ -87,6 +87,12 @@ Camera node to perform facial recognition.
 
 		rosservice call /realsense_id_ros_node/authenticate
 
+* **`device_info`** ([realsense_id_ros/DeviceInfo])
+
+	Get information of the device. on the server. For example, you can trigger the computation from the console with
+
+		rosservice call /realsense_id_ros_node/device_info
+
 * **`enroll`** ([realsense_id_ros/Enroll])
 
 	Perform one enrollment for one new user on the device or on the server. Returns an array of faces with image of the faces. For example, you can trigger the computation from the console with
@@ -171,6 +177,7 @@ Camera node to perform facial recognition.
 [sensor_msgs/Image]: http://docs.ros.org/api/sensor_msgs/html/msg/Image.html
 [realsense_id_ros/FaceArray]: /msg/FaceArray.msg
 [realsense_id_ros/Authenticate]: /srv/Authenticate.srv
+[realsense_id_ros/DeviceInfo]: /srv/DeviceInfo.srv
 [realsense_id_ros/Enroll]: /srv/Enroll.srv
 [realsense_id_ros/RemoveUser]: /srv/RemoveUser.srv
 [realsense_id_ros/QueryUsersId]: /srv/QueryUsersId.srv
