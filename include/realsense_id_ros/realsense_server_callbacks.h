@@ -29,6 +29,9 @@
 
 #include "detectionObject.h"
 
+const int RSID_MIN_POSSIBLE_SCORE = 0;
+const int RSID_MAX_POSSIBLE_SCORE = 4096;
+
 static std::map<std::string, RealSenseID::Faceprints> faceprintsDB;
 
 class RSAuthFaceprintsCallback: public RealSenseID::AuthFaceprintsExtractionCallback{
@@ -125,7 +128,7 @@ class RSAuthFaceprintsCallback: public RealSenseID::AuthFaceprintsExtractionCall
 				newDetection.width = face.w;
 				newDetection.height = face.h;
 				newDetection.id = winningIdStr;
-				newDetection.confidence = 100.0;
+				newDetection.confidence = static_cast<float>(saveMaxScore) / RSID_MAX_POSSIBLE_SCORE;
 				detections_.push_back(newDetection);
 
 				ROS_DEBUG("[RealSense ID]: Detected face %u,%u %ux%u", face.x, face.y, face.w, face.h);
@@ -196,7 +199,7 @@ class RSEnrollFaceprintsCallback: public RealSenseID::EnrollFaceprintsExtraction
 					newDetection.y = face.y;
 					newDetection.width = face.w;
 					newDetection.height = face.h;
-					newDetection.confidence = 100.0;
+					newDetection.confidence = 1.0;
 					detections_.push_back(newDetection);
 
 					ROS_DEBUG("[RealSense ID]: Detected face %u,%u %ux%u", face.x, face.y, face.w, face.h);
