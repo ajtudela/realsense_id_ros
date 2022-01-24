@@ -75,6 +75,10 @@ Camera node to perform facial recognition.
 
 	Array with the detected faces.
 
+* **`camera_info`** ([sensor_msgs/CameraInfo])
+
+	Information about the camera.
+
 * **`image_raw`** ([sensor_msgs/Image])
 
 	Image with the bounding boxes surrounding the detected faces.
@@ -86,6 +90,12 @@ Camera node to perform facial recognition.
 	Perform one authentication on the device or on the server. Returns an array of faces with users id and an image of the faces. For example, you can trigger the computation from the console with
 
 		rosservice call /realsense_id_ros_node/authenticate
+
+* **`cancel_authentication_loop`** ([std_srvs/Empty])
+
+	Cancel the authentication loop. For example, you can trigger the computation from the console with
+
+		rosservice call /realsense_id_ros_node/cancel_authentication_loop
 
 * **`device_info`** ([realsense_id_ros/DeviceInfo])
 
@@ -111,6 +121,12 @@ Camera node to perform facial recognition.
 
 		rosservice call /realsense_id_ros_node/remove_all
 
+* **`start_authentication_loop`** ([std_srvs/Empty])
+
+	Start authentication in a loop. For example, you can trigger the computation from the console with
+
+		rosservice call /realsense_id_ros_node/start_authentication_loop
+
 * **`query_users_id`** ([realsense_id_ros/QueryUsersId])
 
 	Query the ids of the users. Returns the number of users and an array of ids. For example, you can trigger the computation from the console with
@@ -126,6 +142,10 @@ Camera node to perform facial recognition.
 * **`server_mode`** (bool, default: "false")
 
 	Option to manage a faceprints database on the host or the server.
+
+* **`authenticate_loop`** (bool, default: "false")
+
+	Runs authentication in a loop.
 
 #### Reconfigure Parameters
 
@@ -153,10 +173,6 @@ Camera node to perform facial recognition.
 
 	Used in the matcher during authentication, each level means a different set of threshold is used.
 
-* **`authenticate_loop`** (bool, default: "false")
-
-	Runs authentication in a loop.
-
 
 ## Future work
 - [x] Use global dependencies.
@@ -174,6 +190,7 @@ Camera node to perform facial recognition.
 [Ubuntu]: https://ubuntu.com/
 [ROS]: http://www.ros.org
 [std_srvs/Empty]: http://docs.ros.org/api/std_srvs/html/srv/Empty.html
+[sensor_msgs/CameraInfo]: http://docs.ros.org/api/sensor_msgs/html/msg/CameraInfo.html
 [sensor_msgs/Image]: http://docs.ros.org/api/sensor_msgs/html/msg/Image.html
 [realsense_id_ros/FaceArray]: /msg/FaceArray.msg
 [realsense_id_ros/Authenticate]: /srv/Authenticate.srv
