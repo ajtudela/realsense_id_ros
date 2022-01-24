@@ -6,6 +6,8 @@ Changelog for package realsense_id_ros
 ------------------
 * Add detectionToFace function.
 * Change authentication loop to SDK version.
+* Change color of the bounding box if spoofing.
+* Add "Spoof" in topic and image.
 
 1.2.0 (20-01-2022)
 ------------------

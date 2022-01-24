@@ -255,9 +255,13 @@ void RealSenseIDROS::update(){
 		faceArray.faces.push_back(face);
 
 		// Create a rectangle with label
-		cv::rectangle(previewCVImage_, cv::Point2f(detection.x-1, detection.y), cv::Point2f(detection.x + 250, detection.y - 40), cv::Scalar(255, 0, 0), cv::FILLED, cv::LINE_AA);
+		cv::Scalar color;
+		if(detection.id == "Spoof") color = cv::Scalar(255, 0, 0);
+		else color = cv::Scalar(0, 255, 0);
+
+		cv::rectangle(previewCVImage_, cv::Point2f(detection.x-1, detection.y), cv::Point2f(detection.x + 250, detection.y - 40), color, cv::FILLED, cv::LINE_AA);
 		cv::putText(previewCVImage_, detection.id, cv::Point2f(detection.x, detection.y - 5), cv::FONT_HERSHEY_COMPLEX, 1.5, cv::Scalar(0, 0, 0), 1.5, cv::LINE_AA);
-		cv::rectangle(previewCVImage_, cv::Point2f(detection.x, detection.y), cv::Point2f(detection.x + detection.width, detection.y + detection.height), cv::Scalar(255, 0, 0), 4, cv::LINE_AA);
+		cv::rectangle(previewCVImage_, cv::Point2f(detection.x, detection.y), cv::Point2f(detection.x + detection.width, detection.y + detection.height), color, 4, cv::LINE_AA);
 	}
 
 	// Publish array of faces

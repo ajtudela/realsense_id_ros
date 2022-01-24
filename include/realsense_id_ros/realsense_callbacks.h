@@ -52,6 +52,7 @@ class RSAuthenticationCallback: public RealSenseID::AuthenticationCallback{
 			}else if (status == RealSenseID::AuthenticateStatus::Forbidden){
 				ROS_INFO("[RealSense ID]: User is not authenticated");
 			}else if (status == RealSenseID::AuthenticateStatus::Spoof){
+				spoof_ = true;
 				ROS_INFO("[RealSense ID]: Spoof");
 			}else if (status == RealSenseID::AuthenticateStatus::NoFaceDetected){
 				ROS_DEBUG("[RealSense ID]: NoFaceDetected");
@@ -69,13 +70,17 @@ class RSAuthenticationCallback: public RealSenseID::AuthenticationCallback{
 				newDetection.y = face.y;
 				newDetection.width = face.w;
 				newDetection.height = face.h;
-				newDetection.id = userId;
+
+				if(spoof_) newDetection.id = "Spoof";
+				else newDetection.id = userId;
+
 				newDetection.confidence = -1;
 				detections_.push_back(newDetection);
 
 				ROS_DEBUG("[RealSense ID]: Detected face %u,%u %ux%u", face.x, face.y, face.w, face.h);
 			}
 			results_++;
+			spoof_ = false;
 		}
 
 		void OnHint(const RealSenseID::AuthenticateStatus hint) override{
@@ -101,6 +106,7 @@ class RSAuthenticationCallback: public RealSenseID::AuthenticationCallback{
 		RealSenseID::DeviceConfig deviceConfig_;
 		size_t results_ = 0;
 		unsigned int ts_ = 0;
+		bool spoof_;
 };
 
 class RSEnrollmentCallback: public RealSenseID::EnrollmentCallback{
