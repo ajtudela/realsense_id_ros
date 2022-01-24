@@ -105,11 +105,6 @@ class RSAuthenticationCallback: public RealSenseID::AuthenticationCallback{
 
 class RSEnrollmentCallback: public RealSenseID::EnrollmentCallback{
 	public:
-		void clear(){
-			detections_.clear();
-			results_ = 0;
-		};
-
 		void OnResult(const RealSenseID::EnrollStatus status) override{
 			if(status == RealSenseID::EnrollStatus::Success){
 				ROS_INFO("[RealSense ID]: Real face");

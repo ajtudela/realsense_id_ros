@@ -17,14 +17,15 @@ int main(int argc, char** argv){
 	ros::init(argc, argv, "realsense_id");
 	ros::NodeHandle node("");
 	ros::NodeHandle node_private("~");
+	ros::Rate rate(30);
 
 	try{
 		ROS_INFO("[RealSense ID]: Initializing node");
 		RealSenseIDROS realsense(node, node_private);
 		while(ros::ok()){
-			realsense.authenticateLoop();
-			realsense.publishCameraInfo();
+			realsense.update();
 			ros::spinOnce();
+			rate.sleep();
 		}
 	}catch(const char* s){
 		ROS_FATAL_STREAM("[RealSense ID]: " << s);

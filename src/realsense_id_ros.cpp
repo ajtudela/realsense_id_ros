@@ -10,8 +10,6 @@
  */
 
 // C++
-#include <chrono>
-#include <thread>
 #include <fstream>
 
 #include <boost/bind.hpp>
@@ -31,7 +29,7 @@
 
 /* Initialize the subscribers and the publishers */
 RealSenseIDROS::RealSenseIDROS(ros::NodeHandle& node, ros::NodeHandle& node_private): node_(node), nodePrivate_(node_private),
-																	preview_(previewConfig_), setup_(false), authLoopMode_(false){
+																	preview_(previewConfig_), setup_(false), running_(false){
 	// Initialize ROS parameters
 	getParams();
 
@@ -54,6 +52,8 @@ RealSenseIDROS::RealSenseIDROS(ros::NodeHandle& node, ros::NodeHandle& node_priv
 	// Initialize services
 	getDevInfoSrv_ = nodePrivate_.advertiseService("device_info", &RealSenseIDROS::getDeviceInfo, this);
 	setCameraInfoSrv_ = nodePrivate_.advertiseService("set_camera_info", &RealSenseIDROS::setCameraInfo, this);
+	startAuthLoopSrv_ = nodePrivate_.advertiseService("start_authentication_loop", &RealSenseIDROS::startAuthenticationLoop, this);
+	cancelAuthLoopSrv_ = nodePrivate_.advertiseService("cancel_authentication_loop", &RealSenseIDROS::cancelAuthenticationLoop, this);
 
 	if(!serverMode_){
 		ROS_INFO("[RealSense ID]: Using API in device mode");
@@ -73,8 +73,14 @@ RealSenseIDROS::RealSenseIDROS(ros::NodeHandle& node, ros::NodeHandle& node_priv
 
 	// And publishers
 	facePub_ = nodePrivate_.advertise<realsense_id_ros::FaceArray>("faces", 1);
-	imagePub_ = nodePrivate_.advertise<sensor_msgs::Image>("image_raw", 1);
+	imagePub_ = nodePrivate_.advertise<sensor_msgs::Image>("image_raw", 10);
 	cameraInfoPub_ = nodePrivate_.advertise<sensor_msgs::CameraInfo>("camera_info", 1);
+
+	// Change authenticate loop
+	std_srvs::Empty empt;
+	if(!running_ && authLoopMode_){
+		startAuthenticationLoop(empt.request, empt.response);
+	}
 }
 
 /* Delete all parameteres. */
@@ -180,43 +186,16 @@ void RealSenseIDROS::reconfigureCallback(realsense_id_ros::RealSenseIDParameters
 	}
 	ROS_DEBUG_STREAM("[RealSense ID]: Matcher confidence changed to " << config.matcher_confidence_level);
 
-	// Change authenticate loop
-	authLoopMode_ = config.authenticate_loop;
-	ROS_DEBUG("[RealSense ID]: Authenticate loop changed");
-
 	auto status = authenticator_.SetDeviceConfig(deviceConfig_);
 	if(status != RealSenseID::Status::Ok){
 		ROS_ERROR("[RealSense ID]: Failed to apply device settings!");
 		authenticator_.Disconnect();
-	}
-
-	// Start / Stop preview
-	if(authLoopMode_){
-		preview_.StartPreview(previewClbk_);
-	}else{
-		preview_.StopPreview();
 	}
 }
 
 /* Logging callback. */
 void RealSenseIDROS::logCallback(RealSenseID::LogLevel level, const char* msg){
 	ROS_INFO_STREAM("[RealSense ID]: " << msg);
-}
-
-/* Publish image */
-void RealSenseIDROS::publishImage(){
-	// Convert to sensor msgs
-	cv_bridge::CvImage cvImageBr;
-	cvImageBr.header.frame_id = "realsense_id_link";
-	cvImageBr.header.stamp = ros::Time::now();
-	cvImageBr.encoding = sensor_msgs::image_encodings::RGB8;
-	cvImageBr.image = previewCVImage_;
-	imagePub_.publish(cvImageBr.toImageMsg());
-}
-
-/* Publish camera info */
-void RealSenseIDROS::publishCameraInfo(){
-	cameraInfoPub_.publish(cameraInfo_);
 }
 
 /* Create a Face msgs */
@@ -250,48 +229,91 @@ realsense_id_ros::Face RealSenseIDROS::detectionObjectToFace(std_msgs::Header he
 
 /* Authenticate loop */
 void RealSenseIDROS::authenticateLoop(){
-	if(!authLoopMode_) return;
-
-	ROS_INFO_ONCE("[RealSense ID]: Authenticate loop started");
-
-	RSAuthenticationCallback authClbk;
-
 	// Send config to callback
-	authClbk.setDeviceConfig(deviceConfig_);
+	authClbk_.setDeviceConfig(deviceConfig_);
 
 	// Authenticate a user
-	auto status = authenticator_.Authenticate(authClbk);
+	auto status = authenticator_.AuthenticateLoop(authClbk_);
+}
 
-	// Get timestamps saved in callbacks
-	auto faceDetectionTs = authClbk.GetLastTimeStamp();
+/* Publish Faces */
+void RealSenseIDROS::update(){
+	if(!authLoopMode_) return;
 
 	// Create header of FaceArray
 	realsense_id_ros::FaceArray faceArray;
 	faceArray.header.frame_id = "realsense_id_link";
 	faceArray.header.stamp = ros::Time::now();
 
-	// Detections ...
-	if(status == RealSenseID::Status::Ok){
-		std::vector<DetectionObject> detections = authClbk.GetDetections();
+	// Get image
+	previewCVImage_ = previewClbk_.fullImage;
 
-		// Create face array message
-		for(const DetectionObject &detection: detections){
-			previewCVImage_ = previewClbk_.fullImage;
-			realsense_id_ros::Face face = detectionObjectToFace(faceArray.header, detection, previewClbk_.fullImage);
-			faceArray.faces.push_back(face);
+	// Create face array message
+	std::vector<DetectionObject> detections = authClbk_.GetDetections();
+	for(const DetectionObject &detection: detections){
+		realsense_id_ros::Face face = detectionObjectToFace(faceArray.header, detection, previewClbk_.fullImage);
+		faceArray.faces.push_back(face);
 
-			// Create a rectangle with label
-			cv::rectangle(previewCVImage_, cv::Point2f(detection.x-1, detection.y), cv::Point2f(detection.x + 180, detection.y - 22), cv::Scalar(255, 0, 0), cv::FILLED, cv::LINE_AA);
-			cv::putText(previewCVImage_, detection.id, cv::Point2f(detection.x, detection.y - 5), cv::FONT_HERSHEY_COMPLEX_SMALL, 1, cv::Scalar(0, 0, 0), 1.5, cv::LINE_AA);
-			cv::rectangle(previewCVImage_, cv::Point2f(detection.x, detection.y), cv::Point2f(detection.x + detection.width, detection.y + detection.height), cv::Scalar(255, 0, 0), 4, cv::LINE_AA);
-		}
+		// Create a rectangle with label
+		cv::rectangle(previewCVImage_, cv::Point2f(detection.x-1, detection.y), cv::Point2f(detection.x + 250, detection.y - 40), cv::Scalar(255, 0, 0), cv::FILLED, cv::LINE_AA);
+		cv::putText(previewCVImage_, detection.id, cv::Point2f(detection.x, detection.y - 5), cv::FONT_HERSHEY_COMPLEX, 1.5, cv::Scalar(0, 0, 0), 1.5, cv::LINE_AA);
+		cv::rectangle(previewCVImage_, cv::Point2f(detection.x, detection.y), cv::Point2f(detection.x + detection.width, detection.y + detection.height), cv::Scalar(255, 0, 0), 4, cv::LINE_AA);
 	}
 
 	// Publish array of faces
 	facePub_.publish(faceArray);
 
-	// Publish image
-	publishImage();
+	// Clear
+	authClbk_.clear();
+
+	// Convert CV image to sensor msgs
+	cv_bridge::CvImage cvImageBr;
+	cvImageBr.header.frame_id = "realsense_id_link";
+	cvImageBr.header.stamp = ros::Time::now();
+	cvImageBr.encoding = sensor_msgs::image_encodings::RGB8;
+	cvImageBr.image = previewCVImage_;
+	imagePub_.publish(cvImageBr.toImageMsg());
+
+	//Publish camera info 
+	cameraInfoPub_.publish(cameraInfo_);
+}
+
+/* Start authentication loop */
+bool RealSenseIDROS::startAuthenticationLoop(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res){
+	ROS_INFO("[RealSense ID]: Start authentication loop service request");
+
+	if(!running_){
+		preview_.StartPreview(previewClbk_);
+		authLoopThread_ = std::thread(std::bind(&RealSenseIDROS::authenticateLoop, this));
+		running_ = true;
+		authLoopMode_ = true;
+		nodePrivate_.setParam("authenticate_loop", authLoopMode_);
+		ROS_INFO_ONCE("[RealSense ID]: Authentication loop started");
+		return true;
+	}else{
+		ROS_ERROR("[RealSense ID]: Cannot start the authentication loop");
+		return false;
+	}
+}
+
+/* Cancel authentication loop */
+bool RealSenseIDROS::cancelAuthenticationLoop(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res){
+	ROS_INFO("[RealSense ID]: Cancel authentication loop service request");
+
+	if(running_){
+		authenticator_.Cancel();
+		preview_.StopPreview();
+		authLoopThread_.join();
+		running_ = false;
+		authLoopMode_ = false;
+		nodePrivate_.setParam("authenticate_loop", authLoopMode_);
+		ROS_INFO("[RealSense ID]: Authentication loop stopped");
+		return true;
+	}else{
+		nodePrivate_.setParam("authenticate_loop", authLoopMode_);
+		ROS_ERROR("[RealSense ID]: Cannot cancel the authentication loop");
+		return false;
+	}
 }
 
 /* Get device info. */
