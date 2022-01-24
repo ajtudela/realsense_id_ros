@@ -229,10 +229,6 @@ realsense_id_ros::Face RealSenseIDROS::detectionObjectToFace(std_msgs::Header he
 
 /* Authenticate loop */
 void RealSenseIDROS::authenticateLoop(){
-	// Send config to callback
-	authClbk_.setDeviceConfig(deviceConfig_);
-
-	// Authenticate a user
 	auto status = authenticator_.AuthenticateLoop(authClbk_);
 }
 
@@ -390,11 +386,8 @@ bool RealSenseIDROS::authenticateService(realsense_id_ros::Authenticate::Request
 	// Start preview
 	preview_.StartPreview(previewClbk_);
 
-	// Send config to callback
-	RSAuthenticationCallback authClbk;
-	authClbk.setDeviceConfig(deviceConfig_);
-
 	// Authenticate a user
+	RSAuthenticationCallback authClbk;
 	auto status = authenticator_.Authenticate(authClbk);
 
 	// Get timestamps saved in callbacks
