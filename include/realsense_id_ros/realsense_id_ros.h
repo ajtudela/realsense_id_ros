@@ -41,6 +41,7 @@
 #include "realsense_id_ros/RemoveUser.h"
 #include "realsense_id_ros/RealSenseIDParametersConfig.h"
 #include "realsense_id_ros/realsense_callbacks.h"
+#include "realsense_id_ros/faceprintsDatabase.h"
 
 class RealSenseIDROS{
 	public:
@@ -59,7 +60,7 @@ class RealSenseIDROS{
 		std::thread authLoopThread_;
 		bool setup_, running_;
 
-		std::string port_, calibFilename_;
+		std::string port_, dbFilepath_;
 		bool serverMode_, authLoopMode_;
 		cv::Mat previewCVImage_;
 
@@ -70,6 +71,7 @@ class RealSenseIDROS{
 		RealSenseID::Preview preview_;
 		RSPreviewCallback previewClbk_;
 		RSAuthenticationCallback authClbk_;
+		FaceprintsDatabase faceprintsDB_;
 
 		void getParams();
 		void logCallback(RealSenseID::LogLevel level, const char* msg);

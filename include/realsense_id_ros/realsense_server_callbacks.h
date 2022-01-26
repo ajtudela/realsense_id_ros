@@ -13,6 +13,7 @@
 #define REALSENSE_SERVER_CALLBACKS_H
 
 // C++
+#include <fstream>
 #include <string>
 #include <map>
 #include <memory>
@@ -27,16 +28,16 @@
 // ROS
 #include <ros/ros.h>
 
-#include "detectionObject.h"
+#include "realsense_id_ros/detectionObject.h"
 
 const int RSID_MIN_POSSIBLE_SCORE = 0;
 const int RSID_MAX_POSSIBLE_SCORE = 4096;
 
-static std::map<std::string, RealSenseID::Faceprints> faceprintsDB;
+typedef std::map<std::string, RealSenseID::Faceprints> RSFaceprintsDatabase;
 
 class RSAuthFaceprintsCallback: public RealSenseID::AuthFaceprintsExtractionCallback{
 	public:
-		RSAuthFaceprintsCallback(RealSenseID::FaceAuthenticator* authenticator): authenticator_(authenticator){}
+		RSAuthFaceprintsCallback(RealSenseID::FaceAuthenticator* authenticator, RSFaceprintsDatabase faceprintsDB): authenticator_(authenticator), faceprintsDB_(faceprintsDB){}
 
 		void clear(){
 			detections_.clear();
@@ -68,7 +69,7 @@ class RSAuthFaceprintsCallback: public RealSenseID::AuthFaceprintsExtractionCall
 			// Try to match the resulting faceprint to one of the faceprints stored in the db
 			RealSenseID::Faceprints updatedFaceprint;
 
-			ROS_DEBUG_STREAM("[RealSense ID]: Searching " << faceprintsDB.size() << " faceprints");
+			ROS_DEBUG_STREAM("[RealSense ID]: Searching " << faceprintsDB_.size() << " faceprints");
 
 			int saveMaxScore = -1;
 			int winningIndex = -1;
@@ -82,7 +83,7 @@ class RSAuthFaceprintsCallback: public RealSenseID::AuthFaceprintsExtractionCall
 
 			int usersIndex = 0;
 
-			for(auto& iter: faceprintsDB){
+			for(auto& iter: faceprintsDB_){
 				auto& userId = iter.first;
 				auto& existingFaceprint = iter.second;  // faceprints at the DB
 				auto& updatedFaceprint = existingFaceprint; // updated faceprints
@@ -110,11 +111,11 @@ class RSAuthFaceprintsCallback: public RealSenseID::AuthFaceprintsExtractionCall
 				// Apply adaptive-update on the db.
 				if(winningMatchResult.should_update){
 					// Apply adaptive update
-					faceprintsDB[winningIdStr] = winningUpdatedFaceprints;
+					faceprintsDB_[winningIdStr] = winningUpdatedFaceprints;
 					ROS_DEBUG_STREAM("[RealSense ID]: DB adaptive apdate applied to user = " << winningIdStr << ".");
 				}
 			}else{ // no winner, declare authentication failed!
-				ROS_DEBUG_STREAM("[RealSense ID: Forbidden (no faceprint matched)");
+				ROS_DEBUG_STREAM("[RealSense ID]: Forbidden (no faceprint matched)");
 			}
 
 			// Check results and add them to objects
@@ -154,6 +155,7 @@ class RSAuthFaceprintsCallback: public RealSenseID::AuthFaceprintsExtractionCall
 		}
 
 	private:
+		RSFaceprintsDatabase faceprintsDB_;
 		RealSenseID::FaceAuthenticator* authenticator_;
 		std::vector<DetectionObject> detections_;
 		std::vector<RealSenseID::FaceRect> faces_;
@@ -163,7 +165,7 @@ class RSAuthFaceprintsCallback: public RealSenseID::AuthFaceprintsExtractionCall
 
 class RSEnrollFaceprintsCallback: public RealSenseID::EnrollFaceprintsExtractionCallback{
 	public:
-		RSEnrollFaceprintsCallback(const char* user_id): userId_(user_id){}
+		RSEnrollFaceprintsCallback(const char* user_id, RSFaceprintsDatabase faceprintsDB): userId_(user_id), faceprintsDB_(faceprintsDB){}
 
 		void clear(){
 			detections_.clear();
@@ -172,22 +174,23 @@ class RSEnrollFaceprintsCallback: public RealSenseID::EnrollFaceprintsExtraction
 
 		void OnResult(const RealSenseID::EnrollStatus status, const RealSenseID::ExtractedFaceprints* faceprints) override{
 			ROS_DEBUG_STREAM("[RealSense ID]: Result " << status);
+
 			if(status == RealSenseID::EnrollStatus::Success){
-				faceprintsDB[userId_].data.version = faceprints->data.version;
-				faceprintsDB[userId_].data.flags = faceprints->data.flags;
-				faceprintsDB[userId_].data.featuresType = faceprints->data.featuresType;
+				faceprintsDB_[userId_].data.version = faceprints->data.version;
+				faceprintsDB_[userId_].data.flags = faceprints->data.flags;
+				faceprintsDB_[userId_].data.featuresType = faceprints->data.featuresType;
 
 				// Set the full data for the enrolled object:
 				size_t copySize = sizeof(faceprints->data.featuresVector);
 
-				static_assert(sizeof(faceprintsDB[userId_].data.adaptiveDescriptorWithoutMask) == sizeof(faceprints->data.featuresVector), "faceprints sizes does not match");
-				::memcpy(faceprintsDB[userId_].data.adaptiveDescriptorWithoutMask, faceprints->data.featuresVector, copySize);
+				static_assert(sizeof(faceprintsDB_[userId_].data.adaptiveDescriptorWithoutMask) == sizeof(faceprints->data.featuresVector), "faceprints sizes does not match");
+				::memcpy(faceprintsDB_[userId_].data.adaptiveDescriptorWithoutMask, faceprints->data.featuresVector, copySize);
 
-				static_assert(sizeof(faceprintsDB[userId_].data.enrollmentDescriptor) == sizeof(faceprints->data.featuresVector), "faceprints sizes does not match");
-				::memcpy(faceprintsDB[userId_].data.enrollmentDescriptor, faceprints->data.featuresVector, copySize);
+				static_assert(sizeof(faceprintsDB_[userId_].data.enrollmentDescriptor) == sizeof(faceprints->data.featuresVector), "faceprints sizes does not match");
+				::memcpy(faceprintsDB_[userId_].data.enrollmentDescriptor, faceprints->data.featuresVector, copySize);
 
 				// Mark the withMask vector as not-set because its not yet set!
-				faceprintsDB[userId_].data.adaptiveDescriptorWithMask[RSID_INDEX_IN_FEATURES_VECTOR_TO_FLAGS] = RealSenseID::FaVectorFlagsEnum::VecFlagNotSet;
+				faceprintsDB_[userId_].data.adaptiveDescriptorWithMask[RSID_INDEX_IN_FEATURES_VECTOR_TO_FLAGS] = RealSenseID::FaVectorFlagsEnum::VecFlagNotSet;
 
 				// Check results and add them to objects
 				if(faces_.size() > results_){
@@ -229,7 +232,12 @@ class RSEnrollFaceprintsCallback: public RealSenseID::EnrollFaceprintsExtraction
 			return detections_;
 		}
 
+		RSFaceprintsDatabase getDatabase(){
+			return faceprintsDB_;
+		}
+
 	private:
+		RSFaceprintsDatabase faceprintsDB_;
 		std::string userId_;
 		std::vector<DetectionObject> detections_;
 		std::vector<RealSenseID::FaceRect> faces_;

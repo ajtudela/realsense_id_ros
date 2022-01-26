@@ -10,8 +10,6 @@
  */
 
 // C++
-#include <fstream>
-
 #include <boost/bind.hpp>
 
 // OpenCV
@@ -81,6 +79,12 @@ RealSenseIDROS::RealSenseIDROS(ros::NodeHandle& node, ros::NodeHandle& node_priv
 	if(!running_ && authLoopMode_){
 		startAuthenticationLoop(empt.request, empt.response);
 	}
+
+	// Load the database from a file
+	if(!dbFilepath_.empty()){
+		faceprintsDB_.loadDbFromFile(dbFilepath_);
+		ROS_INFO("[RealSense ID]: Faceprints database load from file");
+	}
 }
 
 /* Delete all parameteres. */
@@ -96,7 +100,9 @@ RealSenseIDROS::~RealSenseIDROS(){
 
 	// Delete params
 	nodePrivate_.deleteParam("serial_port");
+	nodePrivate_.deleteParam("authenticate_loop");
 	nodePrivate_.deleteParam("server_mode");
+	nodePrivate_.deleteParam("database");
 }
 
 /* Update parameters of the node. */
@@ -104,8 +110,9 @@ void RealSenseIDROS::getParams(){
 	ROS_INFO("[RealSense ID]: Reading ROS parameters");
 
 	nodePrivate_.param<std::string>("serial_port", port_, "/dev/ttyACM0");
-	nodePrivate_.param<bool>("server_mode", serverMode_, false);
 	nodePrivate_.param<bool>("authenticate_loop", authLoopMode_, false);
+	nodePrivate_.param<bool>("server_mode", serverMode_, false);
+	nodePrivate_.param<std::string>("database", dbFilepath_, "");
 }
 
 /* Dynamic reconfigure callback. */
@@ -555,8 +562,10 @@ bool RealSenseIDROS::authenticateFaceprintsService(realsense_id_ros::Authenticat
 	// Start preview
 	preview_.StartPreview(previewClbk_);
 
+	// Create callback
+	RSAuthFaceprintsCallback authClbk(&authenticator_, faceprintsDB_.data);
+
 	// Extract faceprints of the user in front of the device
-	RSAuthFaceprintsCallback authClbk(&authenticator_);
 	auto status = authenticator_.ExtractFaceprintsForAuth(authClbk);
 	if(status == RealSenseID::Status::Ok){
 		std::vector<DetectionObject> detections = authClbk.GetDetections();
@@ -598,8 +607,10 @@ bool RealSenseIDROS::enrollFaceprintsService(realsense_id_ros::Enroll::Request& 
 	faceArray.header.frame_id = "realsense_id_link";
 	faceArray.header.stamp = ros::Time::now();
 
+	// Create callback
+	RSEnrollFaceprintsCallback enrollClbk(req.id.c_str(), faceprintsDB_.data);
+
 	// Enroll a user
-	RSEnrollFaceprintsCallback enrollClbk{req.id.c_str()};
 	auto status = authenticator_.ExtractFaceprintsForEnroll(enrollClbk);
 	if(status == RealSenseID::Status::Ok){
 		std::vector<DetectionObject> detections = enrollClbk.GetDetections();
@@ -619,6 +630,9 @@ bool RealSenseIDROS::enrollFaceprintsService(realsense_id_ros::Enroll::Request& 
 	// Stop preview
 	preview_.StopPreview();
 
+	// Save database to file
+	faceprintsDB_.data = enrollClbk.getDatabase();
+
 	return success;
 }
 
@@ -627,8 +641,8 @@ bool RealSenseIDROS::removeUserFaceprintService(realsense_id_ros::RemoveUser::Re
 	ROS_INFO("[RealSense ID]: Remove user faceprint service request");
 
 	// Remove a user
-	auto status = faceprintsDB.erase(req.name.c_str());
-	if(status == 1){
+	auto status = faceprintsDB_.removeUser(req.name.c_str());
+	if(status){
 		ROS_INFO("[RealSense ID]: User removed successfully");
 		return true;
 	}else{
@@ -642,7 +656,7 @@ bool RealSenseIDROS::removeAllFaceprintsService(std_srvs::Empty::Request& req, s
 	ROS_INFO("[RealSense ID]: Remove all users faceprints service request");
 
 	// Delete database
-	faceprintsDB.clear();
+	faceprintsDB_.removeAllUsers();
 }
 
 /* Query the device about all enrolled users in server mode. */
@@ -650,9 +664,10 @@ bool RealSenseIDROS::queryUsersIdFaceprintsService(realsense_id_ros::QueryUsersI
 	ROS_INFO("[RealSense ID]: Query users id faceprints service request");
 
 	// Create response
-	res.number_users = faceprintsDB.size();
-	for(const auto& iter: faceprintsDB){
+	res.number_users = faceprintsDB_.getNumberOfUsers();
+	res.users_id = faceprintsDB_.getUsers();
+	/*for(const auto& iter: faceprintsDB){
 		res.users_id.push_back(iter.first);
-	}
+	}*/
 	return true;
 }
