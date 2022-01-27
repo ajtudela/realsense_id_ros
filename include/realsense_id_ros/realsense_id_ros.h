@@ -41,6 +41,7 @@
 #include "realsense_id_ros/RemoveUser.h"
 #include "realsense_id_ros/RealSenseIDParametersConfig.h"
 #include "realsense_id_ros/realsense_callbacks.h"
+#include "realsense_id_ros/realsense_server_callbacks.h"
 #include "realsense_id_ros/faceprintsDatabase.h"
 
 class RealSenseIDROS{
@@ -71,6 +72,7 @@ class RealSenseIDROS{
 		RealSenseID::Preview preview_;
 		RSPreviewCallback previewClbk_;
 		RSAuthenticationCallback authClbk_;
+		RSAuthFaceprintsCallback authFaceClbk_;
 		FaceprintsDatabase faceprintsDB_;
 
 		void getParams();

@@ -74,16 +74,16 @@ RealSenseIDROS::RealSenseIDROS(ros::NodeHandle& node, ros::NodeHandle& node_priv
 	imagePub_ = nodePrivate_.advertise<sensor_msgs::Image>("image_raw", 10);
 	cameraInfoPub_ = nodePrivate_.advertise<sensor_msgs::CameraInfo>("camera_info", 1);
 
-	// Change authenticate loop
-	std_srvs::Empty empt;
-	if(!running_ && authLoopMode_){
-		startAuthenticationLoop(empt.request, empt.response);
-	}
-
 	// Load the database from a file
 	if(!dbFilepath_.empty()){
 		faceprintsDB_.loadDbFromFile(dbFilepath_);
 		ROS_INFO("[RealSense ID]: Faceprints database load from file");
+	}
+
+	// Change authenticate loop
+	std_srvs::Empty empt;
+	if(!running_ && authLoopMode_){
+		startAuthenticationLoop(empt.request, empt.response);
 	}
 }
 
@@ -236,7 +236,13 @@ realsense_id_ros::Face RealSenseIDROS::detectionObjectToFace(std_msgs::Header he
 
 /* Authenticate loop */
 void RealSenseIDROS::authenticateLoop(){
-	auto status = authenticator_.AuthenticateLoop(authClbk_);
+	if(!serverMode_){
+		auto status = authenticator_.AuthenticateLoop(authClbk_);
+	}else{
+		authFaceClbk_.setAuthenticator(&authenticator_);
+		authFaceClbk_.setFaceprintsDatabase(faceprintsDB_.data);
+		auto status = authenticator_.ExtractFaceprintsForAuthLoop(authFaceClbk_);
+	}
 }
 
 /* Publish Faces */
@@ -252,7 +258,13 @@ void RealSenseIDROS::update(){
 	previewCVImage_ = previewClbk_.fullImage;
 
 	// Create face array message
-	std::vector<DetectionObject> detections = authClbk_.GetDetections();
+	std::vector<DetectionObject> detections;
+	if(!serverMode_){
+		detections = authClbk_.GetDetections();
+	}else{
+		detections = authFaceClbk_.GetDetections();
+	}
+
 	for(const DetectionObject &detection: detections){
 		realsense_id_ros::Face face = detectionObjectToFace(faceArray.header, detection, previewClbk_.fullImage);
 		faceArray.faces.push_back(face);
@@ -271,7 +283,11 @@ void RealSenseIDROS::update(){
 	facePub_.publish(faceArray);
 
 	// Clear
-	authClbk_.clear();
+	if(!serverMode_){
+		authClbk_.clear();
+	}else{
+		authFaceClbk_.clear();
+	}
 
 	// Convert CV image to sensor msgs
 	cv_bridge::CvImage cvImageBr;

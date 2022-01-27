@@ -37,6 +37,8 @@ typedef std::map<std::string, RealSenseID::Faceprints> RSFaceprintsDatabase;
 
 class RSAuthFaceprintsCallback: public RealSenseID::AuthFaceprintsExtractionCallback{
 	public:
+		RSAuthFaceprintsCallback(){};
+
 		RSAuthFaceprintsCallback(RealSenseID::FaceAuthenticator* authenticator, RSFaceprintsDatabase faceprintsDB): authenticator_(authenticator), faceprintsDB_(faceprintsDB){}
 
 		void clear(){
@@ -152,6 +154,14 @@ class RSAuthFaceprintsCallback: public RealSenseID::AuthFaceprintsExtractionCall
 
 		const std::vector<DetectionObject>& GetDetections(){
 			return detections_;
+		}
+
+		void setAuthenticator(RealSenseID::FaceAuthenticator* authenticator){
+			authenticator_ = authenticator;
+		}
+
+		void setFaceprintsDatabase(RSFaceprintsDatabase faceprintsDB){
+			faceprintsDB_ = faceprintsDB;
 		}
 
 	private:

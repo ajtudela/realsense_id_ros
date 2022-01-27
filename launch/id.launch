@@ -3,7 +3,7 @@
 	<node name="realsense_id" pkg="realsense_id_ros" type="realsense_id_ros" output="screen" >
 		<param name="serial_port" 			type="string" 	value="/dev/ttyACM0" />
 		<param name="authenticate_loop" 	type="bool" 	value="false" />
-		<param name="server_mode"		 	type="bool" 	value="true" />
-		<param name="database" 				type="string" 	value="$(find realsense_id_ros)/database/basededatos.db" />
+		<param name="server_mode"		 	type="bool" 	value="false" />
+		<param name="database" 				type="string" 	value="$(find realsense_id_ros)/database/database.db" />
 	</node>
 </launch>
