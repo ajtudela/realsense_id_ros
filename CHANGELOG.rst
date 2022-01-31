@@ -2,10 +2,20 @@
 Changelog for package realsense_id_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.3.0 (31-01-2022)
+------------------
+* Load and save db from json file.
+* Authentication loop using server mode.
+* Add hasMask value.
+* Add confidence to image and fix check db.
+
 1.2.1 (24-01-2022)
 ------------------
 * Add detectionToFace function.
 * Change authentication loop to SDK version.
+* Change color of the bounding box if spoofing.
+* Add "Spoof" in topic and image.
+* Remove unnecessary SetDeviceConfig.
 
 1.2.0 (20-01-2022)
 ------------------

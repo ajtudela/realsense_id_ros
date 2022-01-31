@@ -1,7 +1,9 @@
 <?xml version="1.0" ?>
 <launch>   
-	<node name="realsense_id_ros" pkg="realsense_id_ros" type="realsense_id_ros" output="screen" >
+	<node name="realsense_id" pkg="realsense_id_ros" type="realsense_id_ros" output="screen" >
 		<param name="serial_port" 			type="string" 	value="/dev/ttyACM0" />
 		<param name="authenticate_loop" 	type="bool" 	value="false" />
+		<param name="server_mode"		 	type="bool" 	value="false" />
+		<param name="database" 				type="string" 	value="$(find realsense_id_ros)/database/database.db" />
 	</node>
 </launch>

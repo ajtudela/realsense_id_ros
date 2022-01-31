@@ -13,7 +13,7 @@ Both the authentication and enrollment are exposed as ROS services in device mod
 
 Includes a dynamic reconfigure server parameter to change online the device onboard configuration.
 
-Also, the camera can be set to run facial authentication in a loop enabling the parameter in the dynamic reconfigure server.
+Also, the camera can be set to run facial authentication in a loop enabling the parameter "authenticate_loop" both in device and server mode.
 
 
 **Keywords:** ROS, Intel RealSense ID, face recognition
@@ -179,7 +179,7 @@ Camera node to perform facial recognition.
 - [x] Preview snapshot of the faces.
 - [x] Multiple faces.
 - [x] Host mode.
-- [ ] Load and backup of faceprints database in a JSON file.
+- [x] Load and backup of faceprints database in a JSON file.
 - [ ] Pair device.
 - [ ] Secure mode.
 - [x] Option to use authentication loop with published topics.
