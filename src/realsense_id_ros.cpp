@@ -213,6 +213,7 @@ realsense_id_ros::Face RealSenseIDROS::detectionObjectToFace(std_msgs::Header he
 	face.header = header;
 	face.id = detection.id;
 	face.confidence = detection.confidence;
+	face.has_mask = detection.hasMask;
 
 	// 2D bounding box surrounding the object
 	face.bbox.center.x = detection.x + detection.width / 2;

@@ -132,6 +132,7 @@ class RSAuthFaceprintsCallback: public RealSenseID::AuthFaceprintsExtractionCall
 				newDetection.height = face.h;
 				newDetection.id = winningIdStr;
 				newDetection.confidence = static_cast<float>(saveMaxScore) / RSID_MAX_POSSIBLE_SCORE;
+				newDetection.hasMask = (vecFlags == RealSenseID::FaVectorFlagsEnum::VecFlagValidWithMask) ? true : false;
 				detections_.push_back(newDetection);
 
 				ROS_DEBUG("[RealSense ID]: Detected face %u,%u %ux%u", face.x, face.y, face.w, face.h);
@@ -212,6 +213,7 @@ class RSEnrollFaceprintsCallback: public RealSenseID::EnrollFaceprintsExtraction
 					newDetection.y = face.y;
 					newDetection.width = face.w;
 					newDetection.height = face.h;
+					newDetection.hasMask = false;
 					newDetection.confidence = 1.0;
 					detections_.push_back(newDetection);
 

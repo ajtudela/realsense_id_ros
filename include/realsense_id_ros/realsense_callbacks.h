@@ -70,6 +70,7 @@ class RSAuthenticationCallback: public RealSenseID::AuthenticationCallback{
 				newDetection.y = face.y;
 				newDetection.width = face.w;
 				newDetection.height = face.h;
+				newDetection.hasMask = false;
 
 				if(spoof_) newDetection.id = "Spoof";
 				else newDetection.id = userId;
@@ -133,6 +134,7 @@ class RSEnrollmentCallback: public RealSenseID::EnrollmentCallback{
 				newDetection.width = face.w;
 				newDetection.height = face.h;
 				newDetection.confidence = 1.0;
+				newDetection.hasMask = false;
 				detections_.push_back(newDetection);
 
 				ROS_DEBUG("[RealSense ID]: Detected face %u,%u %ux%u", face.x, face.y, face.w, face.h);

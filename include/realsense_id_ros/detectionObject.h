@@ -19,6 +19,7 @@ struct DetectionObject{
 	int x, y, width, height;
 	float confidence;
 	std::string id;
+	bool hasMask;
 };
 
 #endif
