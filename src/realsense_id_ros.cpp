@@ -75,9 +75,11 @@ RealSenseIDROS::RealSenseIDROS(ros::NodeHandle& node, ros::NodeHandle& node_priv
 	cameraInfoPub_ = nodePrivate_.advertise<sensor_msgs::CameraInfo>("camera_info", 1);
 
 	// Load the database from a file
-	if(!dbFilepath_.empty()){
-		faceprintsDB_.loadDbFromFile(dbFilepath_);
-		ROS_INFO("[RealSense ID]: Faceprints database load from file");
+	if(serverMode_){
+		if(!dbFilepath_.empty()){
+			faceprintsDB_.loadDbFromFile(dbFilepath_);
+			ROS_INFO("[RealSense ID]: Faceprints database load from file");
+		}
 	}
 
 	// Change authenticate loop
@@ -270,13 +272,17 @@ void RealSenseIDROS::update(){
 		realsense_id_ros::Face face = detectionObjectToFace(faceArray.header, detection, previewClbk_.fullImage);
 		faceArray.faces.push_back(face);
 
-		// Create a rectangle with label
+		// Color of the person
 		cv::Scalar color;
 		if(detection.id == "Spoof") color = cv::Scalar(255, 0, 0);
 		else color = cv::Scalar(0, 255, 0);
-
-		cv::rectangle(previewCVImage_, cv::Point2f(detection.x-1, detection.y), cv::Point2f(detection.x + 250, detection.y - 40), color, cv::FILLED, cv::LINE_AA);
-		cv::putText(previewCVImage_, detection.id, cv::Point2f(detection.x, detection.y - 5), cv::FONT_HERSHEY_COMPLEX, 1.5, cv::Scalar(0, 0, 0), 1.5, cv::LINE_AA);
+		// Text label
+		std::ostringstream conf;
+		conf << ":" << std::fixed << std::setprecision(3) << detection.confidence;
+		std::string labelText = detection.id + conf.str();
+		// Rectangles for faces
+		cv::rectangle(previewCVImage_, cv::Point2f(detection.x-1, detection.y), cv::Point2f(detection.x + 300, detection.y - 40), color, cv::FILLED, cv::LINE_AA);
+		cv::putText(previewCVImage_, labelText, cv::Point2f(detection.x, detection.y - 5), cv::FONT_HERSHEY_COMPLEX, 1.5, cv::Scalar(0, 0, 0), 1.5, cv::LINE_AA);
 		cv::rectangle(previewCVImage_, cv::Point2f(detection.x, detection.y), cv::Point2f(detection.x + detection.width, detection.y + detection.height), color, 4, cv::LINE_AA);
 	}
 
