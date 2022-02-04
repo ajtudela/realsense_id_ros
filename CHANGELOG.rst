@@ -2,6 +2,10 @@
 Changelog for package realsense_id_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.3.1 (04-02-2022)
+------------------
+* Print device setting.
+
 1.3.0 (31-01-2022)
 ------------------
 * Load and save db from json file.

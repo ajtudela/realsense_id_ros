@@ -125,6 +125,14 @@ void RealSenseIDROS::reconfigureCallback(realsense_id_ros::RealSenseIDParameters
 		lastConfig_ = config;
 		defaultConfig_ = config;
 		setup_ = true;
+		auto status = authenticator_.QueryDeviceConfig(deviceConfig_);
+		ROS_INFO("[RealSense ID]: Authentication settings:");
+		ROS_INFO_STREAM("[RealSense ID]: * Rotation: " << deviceConfig_.camera_rotation);
+		ROS_INFO_STREAM("[RealSense ID]: * Security: " << deviceConfig_.security_level);
+		ROS_INFO_STREAM("[RealSense ID]: * Algo flow Mode: " << deviceConfig_.algo_flow);
+		ROS_INFO_STREAM("[RealSense ID]: * Face policy: " << deviceConfig_.face_selection_policy);
+		ROS_INFO_STREAM("[RealSense ID]: * Dump Mode: " << deviceConfig_.dump_mode);
+		ROS_INFO_STREAM("[RealSense ID]: * Matcher Confidence Level: " << deviceConfig_.matcher_confidence_level);
 		return;
 	}
 
