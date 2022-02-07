@@ -39,6 +39,7 @@ RealSenseIDROS::RealSenseIDROS(ros::NodeHandle& node, ros::NodeHandle& node_priv
 	auto status = authenticator_.Connect(serialConfig_);
 	if(status != RealSenseID::Status::Ok){
 		ROS_ERROR_STREAM("[RealSense ID]: Failed connecting with status " << status);
+		exit(1);
 	}else{
 		ROS_INFO("[RealSense ID]: Connected to device");
 		ROS_DEBUG_STREAM("[RealSense ID]: Opening serial port " << port_.c_str());
@@ -312,7 +313,16 @@ void RealSenseIDROS::update(){
 	cvImageBr.image = previewCVImage_;
 	imagePub_.publish(cvImageBr.toImageMsg());
 
-	//Publish camera info 
+	//Publish camera info
+	cameraInfo_.header.frame_id = "realsense_id_link";
+	cameraInfo_.header.stamp = ros::Time::now();
+	cameraInfo_.height = 1056;
+	cameraInfo_.width = 1920;
+	cameraInfo_.distortion_model = "plumb_bob";
+	cameraInfo_.D = {0.15959049558836952, -0.09629563291813202, -0.02047485432695837, 0.009447889242645117, 0.0};
+	cameraInfo_.K = {911.9729056029453, 0.0, 543.4705406497254, 0.0, 935.5803580030122, 902.0450795440844, 0.0, 0.0, 1.0};
+	cameraInfo_.R = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
+	cameraInfo_.P = {999.5663452148438, 0.0, 557.4771347235219, 0.0, 0.0, 980.9320678710938, 835.6312784614311, 0.0, 0.0, 0.0, 1.0, 0.0};
 	cameraInfoPub_.publish(cameraInfo_);
 }
 

@@ -77,7 +77,7 @@ Camera node to perform facial recognition.
 
 * **`camera_info`** ([sensor_msgs/CameraInfo])
 
-	Information about the camera.
+	Information about the camera intrinsic parameters.
 
 * **`image_raw`** ([sensor_msgs/Image])
 

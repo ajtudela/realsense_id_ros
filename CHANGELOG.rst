@@ -2,6 +2,11 @@
 Changelog for package realsense_id_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.3.2 (07-02-2022)
+------------------
+* Added camera intrinsic parameters.
+* Exit when error in communication.
+
 1.3.1 (04-02-2022)
 ------------------
 * Print device setting.
