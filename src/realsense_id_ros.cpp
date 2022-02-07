@@ -707,8 +707,5 @@ bool RealSenseIDROS::queryUsersIdFaceprintsService(realsense_id_ros::QueryUsersI
 	// Create response
 	res.number_users = faceprintsDB_.getNumberOfUsers();
 	res.users_id = faceprintsDB_.getUsers();
-	/*for(const auto& iter: faceprintsDB){
-		res.users_id.push_back(iter.first);
-	}*/
 	return true;
 }
