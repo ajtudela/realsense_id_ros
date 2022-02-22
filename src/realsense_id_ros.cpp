@@ -307,15 +307,13 @@ void RealSenseIDROS::update(){
 
 	// Convert CV image to sensor msgs
 	cv_bridge::CvImage cvImageBr;
-	cvImageBr.header.frame_id = "realsense_id_link";
-	cvImageBr.header.stamp = ros::Time::now();
+	cvImageBr.header = faceArray.header;
 	cvImageBr.encoding = sensor_msgs::image_encodings::RGB8;
 	cvImageBr.image = previewCVImage_;
 	imagePub_.publish(cvImageBr.toImageMsg());
 
 	//Publish camera info
-	cameraInfo_.header.frame_id = "realsense_id_link";
-	cameraInfo_.header.stamp = ros::Time::now();
+	cameraInfo_.header = faceArray.header;
 	cameraInfo_.height = 1056;
 	cameraInfo_.width = 1920;
 	cameraInfo_.distortion_model = "plumb_bob";
