@@ -69,11 +69,11 @@ class RealSenseIDROS{
 		RealSenseID::SerialConfig serialConfig_;
 		RealSenseID::DeviceConfig deviceConfig_;
 		RealSenseID::PreviewConfig previewConfig_;
-		RealSenseID::Preview preview_;
 		RSPreviewCallback previewClbk_;
 		RSAuthenticationCallback authClbk_;
 		RSAuthFaceprintsCallback authFaceClbk_;
 		FaceprintsDatabase faceprintsDB_;
+		std::unique_ptr<RealSenseID::Preview> preview_;
 
 		void getParams();
 		void logCallback(RealSenseID::LogLevel level, const char* msg);

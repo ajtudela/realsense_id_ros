@@ -27,7 +27,7 @@
 
 /* Initialize the subscribers and the publishers */
 RealSenseIDROS::RealSenseIDROS(ros::NodeHandle& node, ros::NodeHandle& node_private): node_(node), nodePrivate_(node_private),
-																	preview_(previewConfig_), setup_(false), running_(false){
+																	setup_(false), running_(false){
 	// Initialize ROS parameters
 	getParams();
 
@@ -36,9 +36,9 @@ RealSenseIDROS::RealSenseIDROS(ros::NodeHandle& node, ros::NodeHandle& node_priv
 
 	// Set serial config and connect
 	serialConfig_.port = port_.c_str();
-	auto status = authenticator_.Connect(serialConfig_);
-	if(status != RealSenseID::Status::Ok){
-		ROS_ERROR_STREAM("[RealSense ID]: Failed connecting with status " << status);
+	auto connectStatus = authenticator_.Connect(serialConfig_);
+	if(connectStatus != RealSenseID::Status::Ok){
+		ROS_ERROR_STREAM("[RealSense ID]: Failed connecting to port " << serialConfig_.port << " status:" << connectStatus);
 		exit(1);
 	}else{
 		ROS_INFO("[RealSense ID]: Connected to device");
@@ -99,7 +99,7 @@ RealSenseIDROS::~RealSenseIDROS(){
 	authenticator_.Disconnect();
 
 	// Stop preview
-	preview_.StopPreview();
+	preview_->StopPreview();
 
 	// Delete params
 	nodePrivate_.deleteParam("serial_port");
@@ -329,7 +329,8 @@ bool RealSenseIDROS::startAuthenticationLoop(std_srvs::Empty::Request& req, std_
 	ROS_INFO("[RealSense ID]: Start authentication loop service request");
 
 	if(!running_){
-		preview_.StartPreview(previewClbk_);
+		preview_ = std::make_unique<RealSenseID::Preview>(previewConfig_);
+		preview_->StartPreview(previewClbk_);
 		authLoopThread_ = std::thread(std::bind(&RealSenseIDROS::authenticateLoop, this));
 		running_ = true;
 		authLoopMode_ = true;
@@ -348,7 +349,7 @@ bool RealSenseIDROS::cancelAuthenticationLoop(std_srvs::Empty::Request& req, std
 
 	if(running_){
 		authenticator_.Cancel();
-		preview_.StopPreview();
+		preview_->StopPreview();
 		authLoopThread_.join();
 		running_ = false;
 		authLoopMode_ = false;
@@ -430,7 +431,8 @@ bool RealSenseIDROS::authenticateService(realsense_id_ros::Authenticate::Request
 	faceArray.header.stamp = ros::Time::now();
 
 	// Start preview
-	preview_.StartPreview(previewClbk_);
+	preview_ = std::make_unique<RealSenseID::Preview>(previewConfig_);
+	preview_->StartPreview(previewClbk_);
 
 	// Authenticate a user
 	RSAuthenticationCallback authClbk;
@@ -445,7 +447,7 @@ bool RealSenseIDROS::authenticateService(realsense_id_ros::Authenticate::Request
 
 		// Exit if no faces are detected
 		if(detections.empty()){
-			preview_.StopPreview();
+			preview_->StopPreview();
 			return false;
 		}
 
@@ -461,7 +463,7 @@ bool RealSenseIDROS::authenticateService(realsense_id_ros::Authenticate::Request
 	}
 
 	// Stop preview
-	preview_.StopPreview();
+	preview_->StopPreview();
 
 	return success;
 }
@@ -478,7 +480,8 @@ bool RealSenseIDROS::enrollService(realsense_id_ros::Enroll::Request& req, reals
 	faceArray.header.stamp = ros::Time::now();
 
 	// Start preview
-	preview_.StartPreview(previewClbk_);
+	preview_ = std::make_unique<RealSenseID::Preview>(previewConfig_);
+	preview_->StartPreview(previewClbk_);
 
 	// Enroll a user
 	RSEnrollmentCallback enrollClbk;
@@ -501,7 +504,7 @@ bool RealSenseIDROS::enrollService(realsense_id_ros::Enroll::Request& req, reals
 	}
 
 	// Stop preview
-	preview_.StopPreview();
+	preview_->StopPreview();
 
 	return success;
 }
@@ -599,7 +602,8 @@ bool RealSenseIDROS::authenticateFaceprintsService(realsense_id_ros::Authenticat
 	faceArray.header.stamp = ros::Time::now();
 
 	// Start preview
-	preview_.StartPreview(previewClbk_);
+	preview_ = std::make_unique<RealSenseID::Preview>(previewConfig_);
+	preview_->StartPreview(previewClbk_);
 
 	// Create callback
 	RSAuthFaceprintsCallback authClbk(&authenticator_, faceprintsDB_.data);
@@ -611,7 +615,7 @@ bool RealSenseIDROS::authenticateFaceprintsService(realsense_id_ros::Authenticat
 
 		// Exit if no faces are detected
 		if(detections.empty()){
-			preview_.StopPreview();
+			preview_->StopPreview();
 			return false;
 		}
 
@@ -627,7 +631,7 @@ bool RealSenseIDROS::authenticateFaceprintsService(realsense_id_ros::Authenticat
 	}
 
 	// Stop preview
-	preview_.StopPreview();
+	preview_->StopPreview();
 
 	return success;
 }
@@ -639,7 +643,8 @@ bool RealSenseIDROS::enrollFaceprintsService(realsense_id_ros::Enroll::Request& 
 	bool success = false;
 
 	// Start preview
-	preview_.StartPreview(previewClbk_);
+	preview_ = std::make_unique<RealSenseID::Preview>(previewConfig_);
+	preview_->StartPreview(previewClbk_);
 
 	// Create header of FaceArray
 	realsense_id_ros::FaceArray faceArray;
@@ -667,7 +672,7 @@ bool RealSenseIDROS::enrollFaceprintsService(realsense_id_ros::Enroll::Request& 
 	}
 
 	// Stop preview
-	preview_.StopPreview();
+	preview_->StopPreview();
 
 	// Save database to file
 	faceprintsDB_.data = enrollClbk.getDatabase();
