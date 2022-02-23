@@ -112,6 +112,8 @@ RealSenseIDROS::~RealSenseIDROS(){
 void RealSenseIDROS::getParams(){
 	ROS_INFO("[RealSense ID]: Reading ROS parameters");
 
+	frameId_ = "realsense_id_optical_frame";
+
 	nodePrivate_.param<std::string>("serial_port", port_, "/dev/ttyACM0");
 	nodePrivate_.param<bool>("authenticate_loop", authLoopMode_, false);
 	nodePrivate_.param<bool>("server_mode", serverMode_, false);
@@ -236,7 +238,7 @@ realsense_id_ros::Face RealSenseIDROS::detectionObjectToFace(std_msgs::Header he
 	if(!image.empty()){
 		cv::Mat croppedImage = image(cv::Rect(detection.x, detection.y, detection.width, detection.height));
 		cv_bridge::CvImage cvImageBr;
-		cvImageBr.header.frame_id = "realsense_id_link";
+		cvImageBr.header.frame_id = frameId_;
 		cvImageBr.header.stamp = ros::Time::now();
 		cvImageBr.encoding = sensor_msgs::image_encodings::RGB8;
 		cvImageBr.image = croppedImage;
@@ -263,7 +265,7 @@ void RealSenseIDROS::update(){
 
 	// Create header of FaceArray
 	realsense_id_ros::FaceArray faceArray;
-	faceArray.header.frame_id = "realsense_id_link";
+	faceArray.header.frame_id = frameId_;
 	faceArray.header.stamp = ros::Time::now();
 
 	// Get image
@@ -427,7 +429,7 @@ bool RealSenseIDROS::authenticateService(realsense_id_ros::Authenticate::Request
 
 	// Create header of FaceArray
 	realsense_id_ros::FaceArray faceArray;
-	faceArray.header.frame_id = "realsense_id_link";
+	faceArray.header.frame_id = frameId_;
 	faceArray.header.stamp = ros::Time::now();
 
 	// Start preview
@@ -476,7 +478,7 @@ bool RealSenseIDROS::enrollService(realsense_id_ros::Enroll::Request& req, reals
 
 	// Create header of FaceArray
 	realsense_id_ros::FaceArray faceArray;
-	faceArray.header.frame_id = "realsense_id_link";
+	faceArray.header.frame_id = frameId_;
 	faceArray.header.stamp = ros::Time::now();
 
 	// Start preview
@@ -598,7 +600,7 @@ bool RealSenseIDROS::authenticateFaceprintsService(realsense_id_ros::Authenticat
 
 	// Create header of FaceArray
 	realsense_id_ros::FaceArray faceArray;
-	faceArray.header.frame_id = "realsense_id_link";
+	faceArray.header.frame_id = frameId_;
 	faceArray.header.stamp = ros::Time::now();
 
 	// Start preview
@@ -648,7 +650,7 @@ bool RealSenseIDROS::enrollFaceprintsService(realsense_id_ros::Enroll::Request& 
 
 	// Create header of FaceArray
 	realsense_id_ros::FaceArray faceArray;
-	faceArray.header.frame_id = "realsense_id_link";
+	faceArray.header.frame_id = frameId_;
 	faceArray.header.stamp = ros::Time::now();
 
 	// Create callback

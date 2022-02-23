@@ -61,7 +61,7 @@ class RealSenseIDROS{
 		std::thread authLoopThread_;
 		bool setup_, running_;
 
-		std::string port_, dbFilepath_;
+		std::string port_, dbFilepath_, frameId_;
 		bool serverMode_, authLoopMode_;
 		cv::Mat previewCVImage_;
 
