@@ -314,10 +314,10 @@ void RealSenseIDROS::update(){
 
 	//Publish camera info
 	cameraInfo_.header = faceArray.header;
-	cameraInfo_.height = 1056;
-	cameraInfo_.width = 1920;
+	cameraInfo_.height = 1920;
+	cameraInfo_.width = 1056;
 	cameraInfo_.distortion_model = "plumb_bob";
-	cameraInfo_.D = {0.15959049558836952, -0.09629563291813202, -0.02047485432695837, 0.009447889242645117, 0.0};
+	cameraInfo_.D = {0.0, 0.0, 0.0, 0.0, 0.0};
 	cameraInfo_.K = {911.9729056029453, 0.0, 543.4705406497254, 0.0, 935.5803580030122, 902.0450795440844, 0.0, 0.0, 1.0};
 	cameraInfo_.R = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
 	cameraInfo_.P = {999.5663452148438, 0.0, 557.4771347235219, 0.0, 0.0, 980.9320678710938, 835.6312784614311, 0.0, 0.0, 0.0, 1.0, 0.0};
