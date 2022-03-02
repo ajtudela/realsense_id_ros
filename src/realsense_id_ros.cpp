@@ -502,9 +502,9 @@ bool RealSenseIDROS::enrollService(realsense_id_ros::Enroll::Request& req, reals
 
 		// Create face array message
 		std::vector<realsense_id_ros::Face> faces;
-		for(DetectionObject detection: detections){
-			detection.id = req.id.c_str();
+		for(const DetectionObject &detection: detections){
 			realsense_id_ros::Face face = detectionObjectToFace(faceArray.header, detection, previewClbk_.fullImage);
+			face.id = req.id.c_str();
 			faces.push_back(face);
 		}
 
@@ -670,9 +670,9 @@ bool RealSenseIDROS::enrollFaceprintsService(realsense_id_ros::Enroll::Request& 
 
 		// Create face array message
 		std::vector<realsense_id_ros::Face> faces;
-		for(DetectionObject detection: detections){
-			detection.id = req.id.c_str();
+		for(const DetectionObject &detection: detections){
 			realsense_id_ros::Face face = detectionObjectToFace(faceArray.header, detection, previewClbk_.fullImage);
+			face.id = req.id.c_str();
 			faces.push_back(face);
 		}
 
