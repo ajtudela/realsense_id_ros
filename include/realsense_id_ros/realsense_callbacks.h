@@ -43,6 +43,8 @@ class RSAuthenticationCallback: public RealSenseID::AuthenticationCallback{
 		void setDeviceConfig(RealSenseID::DeviceConfig devConfig){deviceConfig_ = devConfig;};
 
 		void OnResult(const RealSenseID::AuthenticateStatus status, const char* userId) override{
+			bool spoof = false;
+
 			if(status == RealSenseID::AuthenticateStatus::Success){
 				if(deviceConfig_.algo_flow == RealSenseID::DeviceConfig::AlgoFlow::SpoofOnly){
 					ROS_INFO("[RealSense ID]: Real face");
@@ -52,7 +54,7 @@ class RSAuthenticationCallback: public RealSenseID::AuthenticationCallback{
 			}else if (status == RealSenseID::AuthenticateStatus::Forbidden){
 				ROS_INFO("[RealSense ID]: User is not authenticated");
 			}else if (status == RealSenseID::AuthenticateStatus::Spoof){
-				spoof_ = true;
+				spoof = true;
 				ROS_INFO("[RealSense ID]: Spoof");
 			}else if (status == RealSenseID::AuthenticateStatus::NoFaceDetected){
 				ROS_DEBUG("[RealSense ID]: NoFaceDetected");
@@ -71,17 +73,13 @@ class RSAuthenticationCallback: public RealSenseID::AuthenticationCallback{
 				newDetection.width = face.w;
 				newDetection.height = face.h;
 				newDetection.hasMask = false;
-
-				if(spoof_) newDetection.id = "Spoof";
-				else newDetection.id = userId;
-
+				newDetection.id = spoof ? "Spoof": userId;
 				newDetection.confidence = -1;
 				detections_.push_back(newDetection);
 
 				ROS_DEBUG("[RealSense ID]: Detected face %u,%u %ux%u", face.x, face.y, face.w, face.h);
 			}
 			results_++;
-			spoof_ = false;
 		}
 
 		void OnHint(const RealSenseID::AuthenticateStatus hint) override{
@@ -107,7 +105,6 @@ class RSAuthenticationCallback: public RealSenseID::AuthenticationCallback{
 		RealSenseID::DeviceConfig deviceConfig_;
 		size_t results_ = 0;
 		unsigned int ts_ = 0;
-		bool spoof_;
 };
 
 class RSEnrollmentCallback: public RealSenseID::EnrollmentCallback{
