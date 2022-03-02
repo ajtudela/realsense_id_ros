@@ -2,6 +2,10 @@
 Changelog for package realsense_id_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.3.3 (02-03-2022)
+------------------
+* Fix bounding box size.
+
 1.3.2 (07-02-2022)
 ------------------
 * Added camera intrinsic parameters.

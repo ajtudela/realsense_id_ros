@@ -270,6 +270,8 @@ void RealSenseIDROS::update(){
 
 	// Get image
 	previewCVImage_ = previewClbk_.fullImage;
+	const size_t colorHeight = (size_t) previewCVImage_.size().height;
+	const size_t colorWidth  = (size_t) previewCVImage_.size().width;
 
 	// Create face array message
 	std::vector<DetectionObject> detections;
@@ -279,13 +281,18 @@ void RealSenseIDROS::update(){
 		detections = authFaceClbk_.GetDetections();
 	}
 
-	for(const DetectionObject &detection: detections){
+	for(DetectionObject &detection: detections){
 		realsense_id_ros::Face face = detectionObjectToFace(faceArray.header, detection, previewClbk_.fullImage);
 		faceArray.faces.push_back(face);
 
+		// Improve bounding box
+		detection.x = detection.x < 0 ? 0 : detection.x;
+		detection.y = detection.y < 0 ? 0 : detection.y;
+		detection.width = detection.width > colorWidth ? colorWidth : detection.width;
+		detection.height = detection.height > colorHeight ? colorHeight : detection.height;
 		// Color of the person
 		cv::Scalar color;
-		if(detection.id == "Spoof") color = cv::Scalar(255, 0, 0);
+		if(detection.id == "Spoof" || detection.id.empty()) color = cv::Scalar(255, 0, 0);
 		else color = cv::Scalar(0, 255, 0);
 		// Text label
 		std::ostringstream conf;
@@ -316,8 +323,8 @@ void RealSenseIDROS::update(){
 
 	//Publish camera info
 	cameraInfo_.header = faceArray.header;
-	cameraInfo_.height = 1920;
-	cameraInfo_.width = 1056;
+	cameraInfo_.height = colorHeight;
+	cameraInfo_.width = colorWidth;
 	cameraInfo_.distortion_model = "plumb_bob";
 	cameraInfo_.D = {0.0, 0.0, 0.0, 0.0, 0.0};
 	cameraInfo_.K = {911.9729056029453, 0.0, 543.4705406497254, 0.0, 935.5803580030122, 902.0450795440844, 0.0, 0.0, 1.0};
