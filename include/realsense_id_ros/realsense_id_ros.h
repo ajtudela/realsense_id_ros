@@ -78,7 +78,6 @@ class RealSenseIDROS{
 		void getParams();
 		void logCallback(RealSenseID::LogLevel level, const char* msg);
 		void reconfigureCallback(realsense_id_ros::RealSenseIDParametersConfig &config, uint32_t level);
-		realsense_id_ros::Face detectionObjectToFace(std_msgs::Header header, DetectionObject detection, cv::Mat image);
 		void authenticateLoop();
 
 		bool getDeviceInfo(realsense_id_ros::DeviceInfo::Request& req, realsense_id_ros::DeviceInfo::Response& res);
