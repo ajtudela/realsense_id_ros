@@ -25,7 +25,7 @@ int main(int argc, char** argv){
 		while (ros::ok()){
 			realsense.update();
 			ros::spinOnce();
-			//rate.sleep(); // Remove this to relay on device frequency
+			rate.sleep(); // Remove this to relay on device frequency
 		}
 	}catch (const char* s){
 		ROS_FATAL_STREAM("[RealSense ID]: " << s);
