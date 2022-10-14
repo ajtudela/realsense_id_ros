@@ -269,7 +269,7 @@ void RealSenseIDROS::update(){
 	faceArray.header.stamp = ros::Time::now();
 
 	// Get image
-	previewCVImage_ = previewClbk_.fullImage;
+	previewCVImage_ = previewClbk_.GetImage();
 	const size_t colorHeight = (size_t) previewCVImage_.size().height;
 	const size_t colorWidth  = (size_t) previewCVImage_.size().width;
 
@@ -282,7 +282,7 @@ void RealSenseIDROS::update(){
 	}
 
 	for(DetectionObject &detection: detections){
-		realsense_id_ros::Face face = detectionObjectToFace(faceArray.header, detection, previewClbk_.fullImage);
+		realsense_id_ros::Face face = detectionObjectToFace(faceArray.header, detection, previewClbk_.GetImage());
 		faceArray.faces.push_back(face);
 
 		// Improve bounding box
@@ -463,7 +463,7 @@ bool RealSenseIDROS::authenticateService(realsense_id_ros::Authenticate::Request
 		// Create face array message
 		std::vector<realsense_id_ros::Face> faces;
 		for(const DetectionObject &detection: detections){
-			realsense_id_ros::Face face = detectionObjectToFace(faceArray.header, detection, previewClbk_.fullImage);
+			realsense_id_ros::Face face = detectionObjectToFace(faceArray.header, detection, previewClbk_.GetImage());
 			faces.push_back(face);
 		}
 
@@ -503,7 +503,7 @@ bool RealSenseIDROS::enrollService(realsense_id_ros::Enroll::Request& req, reals
 		// Create face array message
 		std::vector<realsense_id_ros::Face> faces;
 		for(const DetectionObject &detection: detections){
-			realsense_id_ros::Face face = detectionObjectToFace(faceArray.header, detection, previewClbk_.fullImage);
+			realsense_id_ros::Face face = detectionObjectToFace(faceArray.header, detection, previewClbk_.GetImage());
 			face.id = req.id.c_str();
 			faces.push_back(face);
 		}
@@ -631,7 +631,7 @@ bool RealSenseIDROS::authenticateFaceprintsService(realsense_id_ros::Authenticat
 		// Create face array message
 		std::vector<realsense_id_ros::Face> faces;
 		for(const DetectionObject &detection: detections){
-			realsense_id_ros::Face face = detectionObjectToFace(faceArray.header, detection, previewClbk_.fullImage);
+			realsense_id_ros::Face face = detectionObjectToFace(faceArray.header, detection, previewClbk_.GetImage());
 			faces.push_back(face);
 		}
 
@@ -671,7 +671,7 @@ bool RealSenseIDROS::enrollFaceprintsService(realsense_id_ros::Enroll::Request& 
 		// Create face array message
 		std::vector<realsense_id_ros::Face> faces;
 		for(const DetectionObject &detection: detections){
-			realsense_id_ros::Face face = detectionObjectToFace(faceArray.header, detection, previewClbk_.fullImage);
+			realsense_id_ros::Face face = detectionObjectToFace(faceArray.header, detection, previewClbk_.GetImage());
 			face.id = req.id.c_str();
 			faces.push_back(face);
 		}
