@@ -2,6 +2,13 @@
 Changelog for package realsense_id_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.3.4 (12-10-2022)
+------------------
+* Add private image.
+* Sanitize detection.
+* Move convert to face msg to detectionObject struct.
+* Improve label text on image.
+
 1.3.3 (02-03-2022)
 ------------------
 * Fix bounding box size.
