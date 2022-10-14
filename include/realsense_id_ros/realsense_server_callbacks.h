@@ -49,7 +49,7 @@ class RSAuthFaceprintsCallback: public RealSenseID::AuthFaceprintsExtractionCall
 		void OnResult(const RealSenseID::AuthenticateStatus status, const RealSenseID::ExtractedFaceprints* faceprints) override{
 			ROS_DEBUG_STREAM("[RealSense ID]: Authenticate " << status);
 
-			if(status != RealSenseID::AuthenticateStatus::Success){
+			if (status != RealSenseID::AuthenticateStatus::Success){
 				ROS_DEBUG_STREAM("[RealSense ID]: ExtractFaceprints failed with status" << status);
 				return;
 			}
@@ -61,7 +61,7 @@ class RSAuthFaceprintsCallback: public RealSenseID::AuthFaceprintsExtractionCall
 			int32_t vecFlags = (int32_t)faceprints->data.featuresVector[RSID_INDEX_IN_FEATURES_VECTOR_TO_FLAGS];
 			int32_t opFlags = RealSenseID::FaOperationFlagsEnum::OpFlagAuthWithoutMask;
 
-			if(vecFlags == RealSenseID::FaVectorFlagsEnum::VecFlagValidWithMask){
+			if (vecFlags == RealSenseID::FaVectorFlagsEnum::VecFlagValidWithMask){
 				opFlags = RealSenseID::FaOperationFlagsEnum::OpFlagAuthWithMask;
 			}
 			scannedFaceprint.data.flags = opFlags;
@@ -85,7 +85,7 @@ class RSAuthFaceprintsCallback: public RealSenseID::AuthFaceprintsExtractionCall
 
 			int usersIndex = 0;
 
-			for(auto& iter: faceprintsDB_){
+			for (auto& iter: faceprintsDB_){
 				auto& userId = iter.first;
 				auto& existingFaceprint = iter.second;  // faceprints at the DB
 				auto& updatedFaceprint = existingFaceprint; // updated faceprints
@@ -96,7 +96,7 @@ class RSAuthFaceprintsCallback: public RealSenseID::AuthFaceprintsExtractionCall
 
 				// Save the best winner that matched.
 				if (match.success){
-					if(currentScore > saveMaxScore){
+					if (currentScore > saveMaxScore){
 						saveMaxScore = currentScore;
 						winningMatchResult = match;
 						winningIndex = usersIndex;
@@ -108,10 +108,10 @@ class RSAuthFaceprintsCallback: public RealSenseID::AuthFaceprintsExtractionCall
 			}
 
 			// We have a winner so declare success!
-			if(winningIndex >= 0){
+			if (winningIndex >= 0){
 				ROS_DEBUG_STREAM("[RealSense ID]: Match success. user_id: " << winningIdStr);
 				// Apply adaptive-update on the db.
-				if(winningMatchResult.should_update){
+				if (winningMatchResult.should_update){
 					// Apply adaptive update
 					faceprintsDB_[winningIdStr] = winningUpdatedFaceprints;
 					ROS_DEBUG_STREAM("[RealSense ID]: DB adaptive apdate applied to user = " << winningIdStr << ".");
@@ -121,7 +121,7 @@ class RSAuthFaceprintsCallback: public RealSenseID::AuthFaceprintsExtractionCall
 			}
 
 			// Check results and add them to objects
-			if(faces_.size() > results_){
+			if (faces_.size() > results_){
 				auto& face = faces_[results_];
 
 				// Create new detection
@@ -186,7 +186,7 @@ class RSEnrollFaceprintsCallback: public RealSenseID::EnrollFaceprintsExtraction
 		void OnResult(const RealSenseID::EnrollStatus status, const RealSenseID::ExtractedFaceprints* faceprints) override{
 			ROS_DEBUG_STREAM("[RealSense ID]: Result " << status);
 
-			if(status == RealSenseID::EnrollStatus::Success){
+			if (status == RealSenseID::EnrollStatus::Success){
 				faceprintsDB_[userId_].data.version = faceprints->data.version;
 				faceprintsDB_[userId_].data.flags = faceprints->data.flags;
 				faceprintsDB_[userId_].data.featuresType = faceprints->data.featuresType;
@@ -204,7 +204,7 @@ class RSEnrollFaceprintsCallback: public RealSenseID::EnrollFaceprintsExtraction
 				faceprintsDB_[userId_].data.adaptiveDescriptorWithMask[RSID_INDEX_IN_FEATURES_VECTOR_TO_FLAGS] = RealSenseID::FaVectorFlagsEnum::VecFlagNotSet;
 
 				// Check results and add them to objects
-				if(faces_.size() > results_){
+				if (faces_.size() > results_){
 					auto& face = faces_[results_];
 
 					// Create new detection

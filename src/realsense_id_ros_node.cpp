@@ -22,14 +22,14 @@ int main(int argc, char** argv){
 	try{
 		ROS_INFO("[RealSense ID]: Initializing node");
 		RealSenseIDROS realsense(node, node_private);
-		while(ros::ok()){
+		while (ros::ok()){
 			realsense.update();
 			ros::spinOnce();
 			rate.sleep();
 		}
-	}catch(const char* s){
+	}catch (const char* s){
 		ROS_FATAL_STREAM("[RealSense ID]: " << s);
-	}catch(...){
+	}catch (...){
 		ROS_FATAL_STREAM("[RealSense ID]: Unexpected error");
 	}
 }

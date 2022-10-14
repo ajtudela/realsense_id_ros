@@ -43,7 +43,7 @@ struct FaceprintsDatabase{
 	/* Get vector of users */
 	std::vector<std::string> getUsers(){
 		std::vector<std::string> users;
-		for(const auto& iter: data){
+		for (const auto& iter: data){
 			users.push_back(iter.first);
 		}
 		return users;
@@ -57,7 +57,7 @@ struct FaceprintsDatabase{
 		JSON::Array& db = jsonRoot["db"].a();
 
 		/* Loop through the users */
-		for(const auto &pair: data){
+		for (const auto &pair: data){
 			std::string userId = pair.first;
 			RealSenseID::Faceprints fprints = pair.second;
 
@@ -69,22 +69,22 @@ struct FaceprintsDatabase{
 			// Create faceprints
 			JSON::Object& faceprints = user["faceprints"].o();
 			JSON::Array& reserved = faceprints["reserved"].a();
-			for(const auto &r: fprints.data.reserved){
+			for (const auto &r: fprints.data.reserved){
 				reserved.push_back(r);
 			}
 			faceprints["version"] = fprints.data.version;
 			faceprints["featuresType"] = fprints.data.featuresType;
 			faceprints["flags"] = fprints.data.flags;
 			JSON::Array& adaptiveDescriptorWithoutMask = faceprints["adaptiveDescriptorWithoutMask"].a();
-			for(const auto &r: fprints.data.adaptiveDescriptorWithoutMask){
+			for (const auto &r: fprints.data.adaptiveDescriptorWithoutMask){
 				adaptiveDescriptorWithoutMask.push_back(r);
 			}
 			JSON::Array& adaptiveDescriptorWithMask = faceprints["adaptiveDescriptorWithMask"].a();
-			for(const auto &r: fprints.data.adaptiveDescriptorWithMask){
+			for (const auto &r: fprints.data.adaptiveDescriptorWithMask){
 				adaptiveDescriptorWithMask.push_back(r);
 			}
 			JSON::Array& enrollmentDescriptor = faceprints["enrollmentDescriptor"].a();
-			for(const auto &r: fprints.data.enrollmentDescriptor){
+			for (const auto &r: fprints.data.enrollmentDescriptor){
 				enrollmentDescriptor.push_back(r);
 			}
 			// Push the user to db
@@ -108,7 +108,7 @@ struct FaceprintsDatabase{
 		JSON::Array& db = jsonRoot["db"].a();
 
 		/* Extract the users */
-		for(size_t u = 0; u < db.size(); ++u){
+		for (size_t u = 0; u < db.size(); ++u){
 			std::string userId;
 			RealSenseID::Faceprints fprints;
 
@@ -121,7 +121,7 @@ struct FaceprintsDatabase{
 			JSON::Object& faceprints = user["faceprints"].o();
 			JSON::Array& reserved = faceprints["reserved"].a();
 			int count = 0;
-			for(JSON::Array::const_iterator it=reserved.begin(); it!=reserved.end(); ++it){
+			for (JSON::Array::const_iterator it=reserved.begin(); it!=reserved.end(); ++it){
 				fprints.data.reserved[count++] = it->i();
 			}
 			fprints.data.version = faceprints["version"].i();
@@ -129,17 +129,17 @@ struct FaceprintsDatabase{
 			fprints.data.flags = faceprints["flags"].i();
 			JSON::Array& adaptiveDescriptorWithoutMask = faceprints["adaptiveDescriptorWithoutMask"].a();
 			count = 0;
-			for(JSON::Array::const_iterator it=adaptiveDescriptorWithoutMask.begin(); it!=adaptiveDescriptorWithoutMask.end(); ++it){
+			for (JSON::Array::const_iterator it=adaptiveDescriptorWithoutMask.begin(); it!=adaptiveDescriptorWithoutMask.end(); ++it){
 				fprints.data.adaptiveDescriptorWithoutMask[count++] = it->i();
 			}
 			JSON::Array& adaptiveDescriptorWithMask = faceprints["adaptiveDescriptorWithMask"].a();
 			count = 0;
-			for(JSON::Array::const_iterator it=adaptiveDescriptorWithMask.begin(); it!=adaptiveDescriptorWithMask.end(); ++it){
+			for (JSON::Array::const_iterator it=adaptiveDescriptorWithMask.begin(); it!=adaptiveDescriptorWithMask.end(); ++it){
 				fprints.data.adaptiveDescriptorWithMask[count++] = it->i();
 			}
 			JSON::Array& enrollmentDescriptor = faceprints["enrollmentDescriptor"].a();
 			count = 0;
-			for(JSON::Array::const_iterator it=enrollmentDescriptor.begin(); it!=enrollmentDescriptor.end(); ++it){
+			for (JSON::Array::const_iterator it=enrollmentDescriptor.begin(); it!=enrollmentDescriptor.end(); ++it){
 				fprints.data.enrollmentDescriptor[count++] = it->i();
 			}
 			// Push the user to db
@@ -158,7 +158,7 @@ struct FaceprintsDatabase{
 	/* Load the database from a file */
 	void loadDbFromFile(std::string dbFilepath){
 		std::ifstream dbFile(dbFilepath);
-		if(!dbFile.is_open()){
+		if (!dbFile.is_open()){
 			ROS_ERROR_STREAM("[RealSense ID]: Error opening file " << dbFilepath);
 			exit(1);
 		}
@@ -171,7 +171,7 @@ struct FaceprintsDatabase{
 	/* Save the database to a file */
 	void saveDbToFile(std::string dbFilepath){
 		std::ofstream dbFile(dbFilepath);
-		if(!dbFile){
+		if (!dbFile){
 			ROS_ERROR_STREAM("[RealSense ID]: Error opening file " << dbFilepath);
 			exit(1);
 		}

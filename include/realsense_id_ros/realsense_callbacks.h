@@ -45,8 +45,8 @@ class RSAuthenticationCallback: public RealSenseID::AuthenticationCallback{
 		void OnResult(const RealSenseID::AuthenticateStatus status, const char* userId) override{
 			bool spoof = false;
 
-			if(status == RealSenseID::AuthenticateStatus::Success){
-				if(deviceConfig_.algo_flow == RealSenseID::DeviceConfig::AlgoFlow::SpoofOnly){
+			if (status == RealSenseID::AuthenticateStatus::Success){
+				if (deviceConfig_.algo_flow == RealSenseID::DeviceConfig::AlgoFlow::SpoofOnly){
 					ROS_INFO("[RealSense ID]: Real face");
 				}else{
 					ROS_INFO_STREAM("[RealSense ID]: Authenticated, userdId = " << userId);
@@ -63,7 +63,7 @@ class RSAuthenticationCallback: public RealSenseID::AuthenticationCallback{
 			}
 
 			// Check results and add them to objects
-			if(faces_.size() > results_){
+			if (faces_.size() > results_){
 				auto& face = faces_[results_];
 
 				// Create new detection
@@ -110,7 +110,7 @@ class RSAuthenticationCallback: public RealSenseID::AuthenticationCallback{
 class RSEnrollmentCallback: public RealSenseID::EnrollmentCallback{
 	public:
 		void OnResult(const RealSenseID::EnrollStatus status) override{
-			if(status == RealSenseID::EnrollStatus::Success){
+			if (status == RealSenseID::EnrollStatus::Success){
 				ROS_INFO("[RealSense ID]: Real face");
 			}else if (status == RealSenseID::EnrollStatus::Spoof){
 				ROS_INFO("[RealSense ID]: Spoof");
@@ -121,7 +121,7 @@ class RSEnrollmentCallback: public RealSenseID::EnrollmentCallback{
 			}
 
 			// Check results and add them to objects
-			if(faces_.size() > results_){
+			if (faces_.size() > results_){
 				auto& face = faces_[results_];
 
 				// Create new detection

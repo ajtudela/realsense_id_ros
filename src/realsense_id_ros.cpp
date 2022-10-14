@@ -37,11 +37,11 @@ RealSenseIDROS::RealSenseIDROS(ros::NodeHandle& node, ros::NodeHandle& node_priv
 	// Set serial config and connect
 	serialConfig_.port = port_.c_str();
 	auto connectStatus = authenticator_.Connect(serialConfig_);
-	if(connectStatus != RealSenseID::Status::Ok){
+	if (connectStatus != RealSenseID::Status::Ok){
 		ROS_ERROR_STREAM("[RealSense ID]: Failed connecting to port " << serialConfig_.port << " status:" << connectStatus);
 		exit(1);
 	}else{
-		ROS_INFO("[RealSense ID]: Connected to device");
+		ROS_INFO_STREAM("[RealSense ID]: Connected to device in port" << serialConfig_.port);
 		ROS_DEBUG_STREAM("[RealSense ID]: Opening serial port " << port_.c_str());
 	}
 
@@ -54,7 +54,7 @@ RealSenseIDROS::RealSenseIDROS(ros::NodeHandle& node, ros::NodeHandle& node_priv
 	startAuthLoopSrv_ = nodePrivate_.advertiseService("start_authentication_loop", &RealSenseIDROS::startAuthenticationLoop, this);
 	cancelAuthLoopSrv_ = nodePrivate_.advertiseService("cancel_authentication_loop", &RealSenseIDROS::cancelAuthenticationLoop, this);
 
-	if(!serverMode_){
+	if (!serverMode_){
 		ROS_INFO("[RealSense ID]: Using API in device mode");
 		authSrv_ = nodePrivate_.advertiseService("authenticate", &RealSenseIDROS::authenticateService, this);
 		enrollSrv_ = nodePrivate_.advertiseService("enroll", &RealSenseIDROS::enrollService, this);
@@ -76,8 +76,8 @@ RealSenseIDROS::RealSenseIDROS(ros::NodeHandle& node, ros::NodeHandle& node_priv
 	cameraInfoPub_ = nodePrivate_.advertise<sensor_msgs::CameraInfo>("camera_info", 1);
 
 	// Load the database from a file
-	if(serverMode_){
-		if(!dbFilepath_.empty()){
+	if (serverMode_){
+		if (!dbFilepath_.empty()){
 			faceprintsDB_.loadDbFromFile(dbFilepath_);
 			ROS_INFO("[RealSense ID]: Faceprints database load from file");
 		}
@@ -85,7 +85,7 @@ RealSenseIDROS::RealSenseIDROS(ros::NodeHandle& node, ros::NodeHandle& node_priv
 
 	// Change authenticate loop
 	std_srvs::Empty empt;
-	if(!running_ && authLoopMode_){
+	if (!running_ && authLoopMode_){
 		startAuthenticationLoop(empt.request, empt.response);
 	}
 }
@@ -124,7 +124,7 @@ void RealSenseIDROS::getParams(){
 void RealSenseIDROS::reconfigureCallback(realsense_id_ros::RealSenseIDParametersConfig &config, uint32_t level){
 	ROS_INFO("[RealSense ID]: Reconfigure request for RealSenseID");
 	//The first time we're called, we just want to make sure we have the original configuration
-	if(!setup_){
+	if (!setup_){
 		lastConfig_ = config;
 		defaultConfig_ = config;
 		setup_ = true;
@@ -139,75 +139,75 @@ void RealSenseIDROS::reconfigureCallback(realsense_id_ros::RealSenseIDParameters
 		return;
 	}
 
-	if(config.restore_defaults) {
+	if (config.restore_defaults) {
 		config = defaultConfig_;
 		config.restore_defaults = false;
 	}
 
 	// Change camera rotation
-	if(config.camera_rotation == 0){
+	if (config.camera_rotation == 0){
 		deviceConfig_.camera_rotation = RealSenseID::DeviceConfig::CameraRotation::Rotation_0_Deg;
-	}else if(config.camera_rotation == 180){
+	}else if (config.camera_rotation == 180){
 		deviceConfig_.camera_rotation = RealSenseID::DeviceConfig::CameraRotation::Rotation_180_Deg;
-	}else if(config.camera_rotation == 90){
+	}else if (config.camera_rotation == 90){
 		deviceConfig_.camera_rotation = RealSenseID::DeviceConfig::CameraRotation::Rotation_90_Deg;
-	}else if(config.camera_rotation == 270){
+	}else if (config.camera_rotation == 270){
 		deviceConfig_.camera_rotation = RealSenseID::DeviceConfig::CameraRotation::Rotation_270_Deg;
 	}
 	ROS_DEBUG_STREAM("[RealSense ID]: Camera rotation changed to " << config.camera_rotation);
 
 	// Change security level
-	if(config.security_level.find("high") != std::string::npos){
+	if (config.security_level.find("high") != std::string::npos){
 		deviceConfig_.security_level = RealSenseID::DeviceConfig::SecurityLevel::High;
-	}else if(config.security_level.find("medium") != std::string::npos){
+	}else if (config.security_level.find("medium") != std::string::npos){
 		deviceConfig_.security_level = RealSenseID::DeviceConfig::SecurityLevel::Medium;
-	}else if(config.security_level.find("low") != std::string::npos){
+	}else if (config.security_level.find("low") != std::string::npos){
 		deviceConfig_.security_level = RealSenseID::DeviceConfig::SecurityLevel::Low;
 	}
 	ROS_DEBUG_STREAM("[RealSense ID]: Security level changed to " << config.security_level);
 
 	// Change algorithm flow
-	if(config.algo_flow.find("all") != std::string::npos){
+	if (config.algo_flow.find("all") != std::string::npos){
 		deviceConfig_.algo_flow = RealSenseID::DeviceConfig::AlgoFlow::All;
-	}else if(config.algo_flow.find("detection") != std::string::npos){
+	}else if (config.algo_flow.find("detection") != std::string::npos){
 		deviceConfig_.algo_flow = RealSenseID::DeviceConfig::AlgoFlow::FaceDetectionOnly;
-	}else if(config.algo_flow.find("spoof") != std::string::npos){
+	}else if (config.algo_flow.find("spoof") != std::string::npos){
 		deviceConfig_.algo_flow = RealSenseID::DeviceConfig::AlgoFlow::SpoofOnly;
-	}else if(config.algo_flow.find("recognition") != std::string::npos){
+	}else if (config.algo_flow.find("recognition") != std::string::npos){
 		deviceConfig_.algo_flow = RealSenseID::DeviceConfig::AlgoFlow::RecognitionOnly;
 	}
 	ROS_DEBUG_STREAM("[RealSense ID]: Algorithm flow changed to " << config.algo_flow);
 
 	// Change face selection policy
-	if(config.face_selection_policy.find("single") != std::string::npos){
+	if (config.face_selection_policy.find("single") != std::string::npos){
 		deviceConfig_.face_selection_policy = RealSenseID::DeviceConfig::FaceSelectionPolicy::Single;
-	}else if(config.face_selection_policy.find("all") != std::string::npos){
+	}else if (config.face_selection_policy.find("all") != std::string::npos){
 		deviceConfig_.face_selection_policy = RealSenseID::DeviceConfig::FaceSelectionPolicy::All;
 	}
 	ROS_DEBUG_STREAM("[RealSense ID]: Face selection policy changed to " << config.face_selection_policy);
 
 	// Change dump mode
-	if(config.dump_mode.find("none") != std::string::npos){
+	if (config.dump_mode.find("none") != std::string::npos){
 		deviceConfig_.dump_mode = RealSenseID::DeviceConfig::DumpMode::None;
-	}else if(config.dump_mode.find("cropped") != std::string::npos){
+	}else if (config.dump_mode.find("cropped") != std::string::npos){
 		deviceConfig_.dump_mode = RealSenseID::DeviceConfig::DumpMode::CroppedFace;
-	}else if(config.dump_mode.find("fullframe") != std::string::npos){
+	}else if (config.dump_mode.find("fullframe") != std::string::npos){
 		deviceConfig_.dump_mode = RealSenseID::DeviceConfig::DumpMode::FullFrame;
 	}
 	ROS_DEBUG_STREAM("[RealSense ID]: Dump mode changed to " << config.dump_mode);
 
 	// Change matcher confidence level
-	if(config.matcher_confidence_level.find("high") != std::string::npos){
+	if (config.matcher_confidence_level.find("high") != std::string::npos){
 		deviceConfig_.matcher_confidence_level = RealSenseID::DeviceConfig::MatcherConfidenceLevel::High;
-	}else if(config.matcher_confidence_level.find("medium") != std::string::npos){
+	}else if (config.matcher_confidence_level.find("medium") != std::string::npos){
 		deviceConfig_.matcher_confidence_level = RealSenseID::DeviceConfig::MatcherConfidenceLevel::Medium;
-	}else if(config.matcher_confidence_level.find("low") != std::string::npos){
+	}else if (config.matcher_confidence_level.find("low") != std::string::npos){
 		deviceConfig_.matcher_confidence_level = RealSenseID::DeviceConfig::MatcherConfidenceLevel::Low;
 	}
 	ROS_DEBUG_STREAM("[RealSense ID]: Matcher confidence changed to " << config.matcher_confidence_level);
 
 	auto status = authenticator_.SetDeviceConfig(deviceConfig_);
-	if(status != RealSenseID::Status::Ok){
+	if (status != RealSenseID::Status::Ok){
 		ROS_ERROR("[RealSense ID]: Failed to apply device settings!");
 		authenticator_.Disconnect();
 	}
@@ -235,7 +235,7 @@ realsense_id_ros::Face RealSenseIDROS::detectionObjectToFace(std_msgs::Header he
 	face.bbox.size_y = detection.height;
 
 	// The 2D data that generated these results
-	if(!image.empty()){
+	if (!image.empty()){
 		cv::Mat croppedImage = image(cv::Rect(detection.x, detection.y, detection.width, detection.height));
 		cv_bridge::CvImage cvImageBr;
 		cvImageBr.header.frame_id = frameId_;
@@ -250,7 +250,7 @@ realsense_id_ros::Face RealSenseIDROS::detectionObjectToFace(std_msgs::Header he
 
 /* Authenticate loop */
 void RealSenseIDROS::authenticateLoop(){
-	if(!serverMode_){
+	if (!serverMode_){
 		auto status = authenticator_.AuthenticateLoop(authClbk_);
 	}else{
 		authFaceClbk_.setAuthenticator(&authenticator_);
@@ -261,7 +261,7 @@ void RealSenseIDROS::authenticateLoop(){
 
 /* Publish Faces */
 void RealSenseIDROS::update(){
-	if(!authLoopMode_) return;
+	if (!authLoopMode_) return;
 
 	// Create header of FaceArray
 	realsense_id_ros::FaceArray faceArray;
@@ -275,7 +275,7 @@ void RealSenseIDROS::update(){
 
 	// Create face array message
 	std::vector<DetectionObject> detections;
-	if(!serverMode_){
+	if (!serverMode_){
 		detections = authClbk_.GetDetections();
 	}else{
 		detections = authFaceClbk_.GetDetections();
@@ -286,13 +286,13 @@ void RealSenseIDROS::update(){
 		faceArray.faces.push_back(face);
 
 		// Improve bounding box
-		detection.x = detection.x < 0 ? 0 : detection.x;
-		detection.y = detection.y < 0 ? 0 : detection.y;
-		detection.width = detection.width > colorWidth ? colorWidth : detection.width;
-		detection.height = detection.height > colorHeight ? colorHeight : detection.height;
+		detection.x = (detection.x < 0) ? 0 : detection.x;
+		detection.y = (detection.y < 0) ? 0 : detection.y;
+		detection.width = (detection.width > colorWidth) ? colorWidth : detection.width;
+		detection.height = (detection.height > colorHeight) ? colorHeight : detection.height;
 		// Color of the person
 		cv::Scalar color;
-		if(detection.id == "Spoof" || detection.id.empty()) color = cv::Scalar(255, 0, 0);
+		if (detection.id == "Spoof" || detection.id.empty()) color = cv::Scalar(255, 0, 0);
 		else color = cv::Scalar(0, 255, 0);
 		// Text label
 		std::ostringstream conf;
@@ -308,7 +308,7 @@ void RealSenseIDROS::update(){
 	facePub_.publish(faceArray);
 
 	// Clear
-	if(!serverMode_){
+	if (!serverMode_){
 		authClbk_.clear();
 	}else{
 		authFaceClbk_.clear();
@@ -337,7 +337,7 @@ void RealSenseIDROS::update(){
 bool RealSenseIDROS::startAuthenticationLoop(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res){
 	ROS_INFO("[RealSense ID]: Start authentication loop service request");
 
-	if(!running_){
+	if (!running_){
 		preview_ = std::make_unique<RealSenseID::Preview>(previewConfig_);
 		preview_->StartPreview(previewClbk_);
 		authLoopThread_ = std::thread(std::bind(&RealSenseIDROS::authenticateLoop, this));
@@ -356,7 +356,7 @@ bool RealSenseIDROS::startAuthenticationLoop(std_srvs::Empty::Request& req, std_
 bool RealSenseIDROS::cancelAuthenticationLoop(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res){
 	ROS_INFO("[RealSense ID]: Cancel authentication loop service request");
 
-	if(running_){
+	if (running_){
 		authenticator_.Cancel();
 		preview_->StopPreview();
 		authLoopThread_.join();
@@ -379,21 +379,21 @@ bool RealSenseIDROS::getDeviceInfo(realsense_id_ros::DeviceInfo::Request& req, r
 	RealSenseID::DeviceController deviceController;
 
 	auto connectStatus = deviceController.Connect(serialConfig_);
-	if(connectStatus != RealSenseID::Status::Ok){
+	if (connectStatus != RealSenseID::Status::Ok){
 		ROS_INFO_STREAM("[RealSense ID]: Failed connecting to port " << serialConfig_.port << " status:" << connectStatus);
 		return false;
 	}
 
 	std::string firmwareVersion;
 	auto status = deviceController.QueryFirmwareVersion(firmwareVersion);
-	if(status != RealSenseID::Status::Ok){
+	if (status != RealSenseID::Status::Ok){
 		ROS_INFO("[RealSense ID]: Failed getting firmware version!");
 		return false;
 	}
 
 	std::string serialNumber;
 	status = deviceController.QuerySerialNumber(serialNumber);
-	if(status != RealSenseID::Status::Ok){
+	if (status != RealSenseID::Status::Ok){
 		ROS_INFO("[RealSense ID]: Failed getting serial number!");
 		return false;
 	}
@@ -416,7 +416,7 @@ bool RealSenseIDROS::setCameraInfo(sensor_msgs::SetCameraInfo::Request& req, sen
 
 	cameraInfo_ = req.camera_info;
 
-	if(!node_.ok()){
+	if (!node_.ok()){
 		ROS_ERROR("[RealSense ID]: Camera driver not running.");
 		res.status_message = "Camera driver not running.";
 		res.success = false;
@@ -451,11 +451,11 @@ bool RealSenseIDROS::authenticateService(realsense_id_ros::Authenticate::Request
 	auto faceDetectionTs = authClbk.GetLastTimeStamp();
 
 	// Detections ...
-	if(status == RealSenseID::Status::Ok){
+	if (status == RealSenseID::Status::Ok){
 		std::vector<DetectionObject> detections = authClbk.GetDetections();
 
 		// Exit if no faces are detected
-		if(detections.empty()){
+		if (detections.empty()){
 			preview_->StopPreview();
 			return false;
 		}
@@ -497,7 +497,7 @@ bool RealSenseIDROS::enrollService(realsense_id_ros::Enroll::Request& req, reals
 	auto status = authenticator_.Enroll(enrollClbk, req.id.c_str());
 
 	// Detections ...
-	if(status == RealSenseID::Status::Ok){
+	if (status == RealSenseID::Status::Ok){
 		std::vector<DetectionObject> detections = enrollClbk.GetDetections();
 
 		// Create face array message
@@ -524,7 +524,7 @@ bool RealSenseIDROS::removeUserService(realsense_id_ros::RemoveUser::Request& re
 
 	// Remove a user
 	auto status = authenticator_.RemoveUser(req.name.c_str());
-	if(status == RealSenseID::Status::Ok){
+	if (status == RealSenseID::Status::Ok){
 		ROS_INFO("[RealSense ID]: User removed successfully");
 		return true;
 	}else{
@@ -539,7 +539,7 @@ bool RealSenseIDROS::removeAllService(std_srvs::Empty::Request& req, std_srvs::E
 
 	// Remove all users
 	auto status = authenticator_.RemoveAll();
-	if(status == RealSenseID::Status::Ok){
+	if (status == RealSenseID::Status::Ok){
 		ROS_INFO("[RealSense ID]: Users removed successfully");
 		return true;
 	}else{
@@ -555,12 +555,12 @@ bool RealSenseIDROS::queryUsersIdService(realsense_id_ros::QueryUsersId::Request
 	// Get number of users
 	unsigned int numberOfUsers = 0;
 	auto status = authenticator_.QueryNumberOfUsers(numberOfUsers);
-	if(status != RealSenseID::Status::Ok){
+	if (status != RealSenseID::Status::Ok){
 		ROS_INFO_STREAM("[RealSense ID]: Status: " << status);
 		return false;
 	}
 
-	if(numberOfUsers == 0){
+	if (numberOfUsers == 0){
 		ROS_INFO("[RealSense ID]: No users found");
 		return false;
 	}
@@ -572,7 +572,7 @@ bool RealSenseIDROS::queryUsersIdService(realsense_id_ros::QueryUsersId::Request
 	}
 	unsigned int numberOfUsersInOut = numberOfUsers;
 	status = authenticator_.QueryUserIds(userIds, numberOfUsersInOut);
-	if(status != RealSenseID::Status::Ok){
+	if (status != RealSenseID::Status::Ok){
 		ROS_INFO_STREAM("[RealSense ID]: Status: " << status);
 		// Free allocated memory and return on error
 		for(unsigned int i = 0; i < numberOfUsers; i++){
@@ -619,11 +619,11 @@ bool RealSenseIDROS::authenticateFaceprintsService(realsense_id_ros::Authenticat
 
 	// Extract faceprints of the user in front of the device
 	auto status = authenticator_.ExtractFaceprintsForAuth(authClbk);
-	if(status == RealSenseID::Status::Ok){
+	if (status == RealSenseID::Status::Ok){
 		std::vector<DetectionObject> detections = authClbk.GetDetections();
 
 		// Exit if no faces are detected
-		if(detections.empty()){
+		if (detections.empty()){
 			preview_->StopPreview();
 			return false;
 		}
@@ -665,7 +665,7 @@ bool RealSenseIDROS::enrollFaceprintsService(realsense_id_ros::Enroll::Request& 
 
 	// Enroll a user
 	auto status = authenticator_.ExtractFaceprintsForEnroll(enrollClbk);
-	if(status == RealSenseID::Status::Ok){
+	if (status == RealSenseID::Status::Ok){
 		std::vector<DetectionObject> detections = enrollClbk.GetDetections();
 
 		// Create face array message
@@ -695,7 +695,7 @@ bool RealSenseIDROS::removeUserFaceprintService(realsense_id_ros::RemoveUser::Re
 
 	// Remove a user
 	auto status = faceprintsDB_.removeUser(req.name.c_str());
-	if(status){
+	if (status){
 		ROS_INFO("[RealSense ID]: User removed successfully");
 		return true;
 	}else{
