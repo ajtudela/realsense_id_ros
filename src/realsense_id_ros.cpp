@@ -266,7 +266,7 @@ void RealSenseIDROS::update(){
 		conf << ":" << std::fixed << std::setprecision(3) << detection.confidence;
 		std::string labelText = detection.id + conf.str();
 		// Rectangles for faces
-		cv::rectangle(previewCVImage_, cv::Point2f(detection.x-1, detection.y), cv::Point2f(detection.x + 300, detection.y - 40), color, cv::FILLED, cv::LINE_AA);
+		cv::rectangle(previewCVImage_, cv::Point2f(detection.x-1, detection.y), cv::Point2f(detection.x + 400, detection.y - 40), color, cv::FILLED, cv::LINE_AA);
 		cv::putText(previewCVImage_, labelText, cv::Point2f(detection.x, detection.y - 5), cv::FONT_HERSHEY_COMPLEX, 1.5, cv::Scalar(0, 0, 0), 1.5, cv::LINE_AA);
 		cv::rectangle(previewCVImage_, cv::Point2f(detection.x, detection.y), cv::Point2f(detection.x + detection.width, detection.y + detection.height), color, 4, cv::LINE_AA);
 	}
