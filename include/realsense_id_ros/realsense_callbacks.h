@@ -169,14 +169,19 @@ class RSEnrollmentCallback: public RealSenseID::EnrollmentCallback{
 
 class RSPreviewCallback: public RealSenseID::PreviewImageReadyCallback{
 	public:
-		cv::Mat fullImage;
-
 		void OnPreviewImageReady(const RealSenseID::Image image){
 			// Convert to CV Mat
-			fullImage = cv::Mat(image.height, image.width, CV_8UC3, image.buffer);
+			image_ = cv::Mat(image.height, image.width, CV_8UC3, image.buffer);
 
 			ROS_DEBUG_STREAM("[RealSense ID]: Preview " << image.width << "x" << image.height << " (" << image.size << "B)");
 		}
+
+		const cv::Mat& GetImage(){
+			return image_;
+		}
+
+	private:
+		cv::Mat image_;
 };
 
 #endif
