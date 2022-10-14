@@ -281,15 +281,11 @@ void RealSenseIDROS::update(){
 		detections = authFaceClbk_.GetDetections();
 	}
 
-	for(DetectionObject &detection: detections){
-		realsense_id_ros::Face face = detectionObjectToFace(faceArray.header, detection, previewClbk_.GetImage());
+	for (auto &detection: detections){
+		detection.sanitizeSize(colorWidth, colorHeight);
+		realsense_id_ros::Face face = detectionObjectToFace(faceArray.header, detection, previewCVImage_);
 		faceArray.faces.push_back(face);
 
-		// Improve bounding box
-		detection.x = (detection.x < 0) ? 0 : detection.x;
-		detection.y = (detection.y < 0) ? 0 : detection.y;
-		detection.width = (detection.width > colorWidth) ? colorWidth : detection.width;
-		detection.height = (detection.height > colorHeight) ? colorHeight : detection.height;
 		// Color of the person
 		cv::Scalar color;
 		if (detection.id == "Spoof" || detection.id.empty()) color = cv::Scalar(255, 0, 0);
@@ -443,6 +439,11 @@ bool RealSenseIDROS::authenticateService(realsense_id_ros::Authenticate::Request
 	preview_ = std::make_unique<RealSenseID::Preview>(previewConfig_);
 	preview_->StartPreview(previewClbk_);
 
+	// Get image
+	previewCVImage_ = previewClbk_.GetImage();
+	const size_t colorHeight = (size_t) previewCVImage_.size().height;
+	const size_t colorWidth  = (size_t) previewCVImage_.size().width;
+
 	// Authenticate a user
 	RSAuthenticationCallback authClbk;
 	auto status = authenticator_.Authenticate(authClbk);
@@ -462,8 +463,9 @@ bool RealSenseIDROS::authenticateService(realsense_id_ros::Authenticate::Request
 
 		// Create face array message
 		std::vector<realsense_id_ros::Face> faces;
-		for(const DetectionObject &detection: detections){
-			realsense_id_ros::Face face = detectionObjectToFace(faceArray.header, detection, previewClbk_.GetImage());
+		for (auto &detection: detections){
+			detection.sanitizeSize(colorWidth, colorHeight);
+			realsense_id_ros::Face face = detectionObjectToFace(faceArray.header, detection, previewCVImage_);
 			faces.push_back(face);
 		}
 
@@ -492,6 +494,11 @@ bool RealSenseIDROS::enrollService(realsense_id_ros::Enroll::Request& req, reals
 	preview_ = std::make_unique<RealSenseID::Preview>(previewConfig_);
 	preview_->StartPreview(previewClbk_);
 
+	// Get image
+	previewCVImage_ = previewClbk_.GetImage();
+	const size_t colorHeight = (size_t) previewCVImage_.size().height;
+	const size_t colorWidth  = (size_t) previewCVImage_.size().width;
+
 	// Enroll a user
 	RSEnrollmentCallback enrollClbk;
 	auto status = authenticator_.Enroll(enrollClbk, req.id.c_str());
@@ -502,8 +509,9 @@ bool RealSenseIDROS::enrollService(realsense_id_ros::Enroll::Request& req, reals
 
 		// Create face array message
 		std::vector<realsense_id_ros::Face> faces;
-		for(const DetectionObject &detection: detections){
-			realsense_id_ros::Face face = detectionObjectToFace(faceArray.header, detection, previewClbk_.GetImage());
+		for (auto &detection: detections){
+			detection.sanitizeSize(colorWidth, colorHeight);
+			realsense_id_ros::Face face = detectionObjectToFace(faceArray.header, detection, previewCVImage_);
 			face.id = req.id.c_str();
 			faces.push_back(face);
 		}
@@ -614,6 +622,11 @@ bool RealSenseIDROS::authenticateFaceprintsService(realsense_id_ros::Authenticat
 	preview_ = std::make_unique<RealSenseID::Preview>(previewConfig_);
 	preview_->StartPreview(previewClbk_);
 
+	// Get image
+	previewCVImage_ = previewClbk_.GetImage();
+	const size_t colorHeight = (size_t) previewCVImage_.size().height;
+	const size_t colorWidth  = (size_t) previewCVImage_.size().width;
+
 	// Create callback
 	RSAuthFaceprintsCallback authClbk(&authenticator_, faceprintsDB_.data);
 
@@ -630,8 +643,9 @@ bool RealSenseIDROS::authenticateFaceprintsService(realsense_id_ros::Authenticat
 
 		// Create face array message
 		std::vector<realsense_id_ros::Face> faces;
-		for(const DetectionObject &detection: detections){
-			realsense_id_ros::Face face = detectionObjectToFace(faceArray.header, detection, previewClbk_.GetImage());
+		for (auto &detection: detections){
+			detection.sanitizeSize(colorWidth, colorHeight);
+			realsense_id_ros::Face face = detectionObjectToFace(faceArray.header, detection, previewCVImage_);
 			faces.push_back(face);
 		}
 
@@ -651,14 +665,19 @@ bool RealSenseIDROS::enrollFaceprintsService(realsense_id_ros::Enroll::Request& 
 
 	bool success = false;
 
-	// Start preview
-	preview_ = std::make_unique<RealSenseID::Preview>(previewConfig_);
-	preview_->StartPreview(previewClbk_);
-
 	// Create header of FaceArray
 	realsense_id_ros::FaceArray faceArray;
 	faceArray.header.frame_id = frameId_;
 	faceArray.header.stamp = ros::Time::now();
+
+	// Start preview
+	preview_ = std::make_unique<RealSenseID::Preview>(previewConfig_);
+	preview_->StartPreview(previewClbk_);
+
+	// Get image
+	previewCVImage_ = previewClbk_.GetImage();
+	const size_t colorHeight = (size_t) previewCVImage_.size().height;
+	const size_t colorWidth  = (size_t) previewCVImage_.size().width;
 
 	// Create callback
 	RSEnrollFaceprintsCallback enrollClbk(req.id.c_str(), faceprintsDB_.data);
@@ -670,8 +689,9 @@ bool RealSenseIDROS::enrollFaceprintsService(realsense_id_ros::Enroll::Request& 
 
 		// Create face array message
 		std::vector<realsense_id_ros::Face> faces;
-		for(const DetectionObject &detection: detections){
-			realsense_id_ros::Face face = detectionObjectToFace(faceArray.header, detection, previewClbk_.GetImage());
+		for (auto &detection: detections){
+			detection.sanitizeSize(colorWidth, colorHeight);
+			realsense_id_ros::Face face = detectionObjectToFace(faceArray.header, detection, previewCVImage_);
 			face.id = req.id.c_str();
 			faces.push_back(face);
 		}

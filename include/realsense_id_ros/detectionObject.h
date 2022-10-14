@@ -16,7 +16,14 @@
 #include <string>
 
 struct DetectionObject{
-	int x, y, width, height;
+	void sanitizeSize(const size_t& imageWidth, const size_t& imageHeight){
+		x = (x < 0) ? 0 : x;
+		y = (y < 0) ? 0 : y;
+		width = ((x + width) > imageWidth) ? (imageWidth - x) : width;
+		height = ((y + height) > imageHeight) ? (imageHeight - y) : height;
+	}
+
+	size_t x, y, width, height;
 	float confidence;
 	std::string id;
 	bool hasMask;
