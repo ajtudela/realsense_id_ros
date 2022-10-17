@@ -259,7 +259,7 @@ void RealSenseIDROS::update(){
 
 		// Color of the person
 		cv::Scalar color;
-		if (detection.id == realsense_id_ros::Face:SPOOF || detection.id.empty()) color = cv::Scalar(255, 0, 0);
+		if (detection.id == realsense_id_ros::Face::SPOOF || detection.id.empty()) color = cv::Scalar(255, 0, 0);
 		else color = cv::Scalar(0, 255, 0);
 		// Text label
 		std::ostringstream conf;
