@@ -2,6 +2,10 @@
 Changelog for package realsense_id_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.4.0 (17-10-2022)
+------------------
+* Add SPOOF constant.
+
 1.3.4 (12-10-2022)
 ------------------
 * Add private image.
