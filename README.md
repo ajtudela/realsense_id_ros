@@ -40,6 +40,7 @@ Build the Intel RealSense ID SDK as follows:
 ```console
 $ cd $HOME
 $ git clone https://github.com/IntelRealSense/RealSenseID
+$ cd RealSenseID
 $ mkdir build && cd build
 $ cmake .. -DRSID_PREVIEW=1 -DRSID_DEBUG_CONSOLE=OFF -DRSID_INSTALL=ON
 $ make -j
