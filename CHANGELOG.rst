@@ -2,6 +2,10 @@
 Changelog for package realsense_id_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.4.1 (19-10-2022)
+------------------
+* Update confidence description in message.
+
 1.4.0 (17-10-2022)
 ------------------
 * Add SPOOF constant.
