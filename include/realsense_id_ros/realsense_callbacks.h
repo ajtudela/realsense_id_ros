@@ -74,7 +74,7 @@ class RSAuthenticationCallback: public RealSenseID::AuthenticationCallback{
 				newDetection.height = face.h;
 				newDetection.hasMask = false;
 				newDetection.id = spoof ? "Spoof": userId;
-				newDetection.confidence = -1;
+				newDetection.confidence = 1.0;
 				detections_.push_back(newDetection);
 
 				ROS_DEBUG("[RealSense ID]: Detected face %u,%u %ux%u", face.x, face.y, face.w, face.h);
