@@ -2,6 +2,10 @@
 Changelog for package realsense_id_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.0.0 (03-02-2022)
+------------------
+* First ROS2 (Galactic) version.
+
 1.4.1 (19-10-2022)
 ------------------
 * Update confidence description in message.

@@ -1,7 +1,7 @@
 /*
  * REALSENSE CALLBACKS CLASSES
  *
- * Copyright (c) 2021 Alberto José Tudela Roldán <ajtudela@gmail.com>
+ * Copyright (c) 2021-2023 Alberto José Tudela Roldán <ajtudela@gmail.com>
  * 
  * This file is part of realsense_id_ros project.
  * 
@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef REALSENSE_CALLBACKS_H
-#define REALSENSE_CALLBACKS_H
+#ifndef REALSENSE_ID_ROS__REALSENSE_CALLBACKS_HPP_
+#define REALSENSE_ID_ROS__REALSENSE_CALLBACKS_HPP_
 
 // C++
 #include <string>
@@ -29,9 +29,9 @@
 #include <RealSenseID/Preview.h>
 
 // ROS
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
 
-#include "detectionObject.h"
+#include "realsense_id_ros/detection_object.hpp"
 
 class RSAuthenticationCallback: public RealSenseID::AuthenticationCallback{
 	public:
@@ -40,26 +40,27 @@ class RSAuthenticationCallback: public RealSenseID::AuthenticationCallback{
 			results_ = 0;
 		};
 
-		void setDeviceConfig(RealSenseID::DeviceConfig devConfig){deviceConfig_ = devConfig;};
+		void setDeviceConfig(RealSenseID::DeviceConfig devConfig){device_config_ = devConfig;};
 
 		void OnResult(const RealSenseID::AuthenticateStatus status, const char* userId) override{
 			bool spoof = false;
 
 			if (status == RealSenseID::AuthenticateStatus::Success){
-				if (deviceConfig_.algo_flow == RealSenseID::DeviceConfig::AlgoFlow::SpoofOnly){
-					ROS_INFO("[RealSense ID]: Real face");
+				if (device_config_.algo_flow == RealSenseID::DeviceConfig::AlgoFlow::SpoofOnly){
+					RCLCPP_INFO(rclcpp::get_logger("RealSenseID"), "Real face");
 				}else{
-					ROS_INFO_STREAM("[RealSense ID]: Authenticated, userdId = " << userId);
+					RCLCPP_INFO_STREAM(rclcpp::get_logger("RealSenseID"), "Authenticated, userdId = " 
+										<< userId);
 				}
 			}else if (status == RealSenseID::AuthenticateStatus::Forbidden){
-				ROS_INFO("[RealSense ID]: User is not authenticated");
+				RCLCPP_INFO(rclcpp::get_logger("RealSenseID"), "User is not authenticated");
 			}else if (status == RealSenseID::AuthenticateStatus::Spoof){
 				spoof = true;
-				ROS_INFO("[RealSense ID]: Spoof");
+				RCLCPP_INFO(rclcpp::get_logger("RealSenseID"), "Spoof");
 			}else if (status == RealSenseID::AuthenticateStatus::NoFaceDetected){
-				ROS_DEBUG("[RealSense ID]: NoFaceDetected");
+				RCLCPP_DEBUG(rclcpp::get_logger("RealSenseID"), "NoFaceDetected");
 			}else{
-				ROS_DEBUG_STREAM("[RealSense ID]: Authenticate " << status);
+				RCLCPP_DEBUG_STREAM(rclcpp::get_logger("RealSenseID"), "Authenticate " << status);
 			}
 
 			// Check results and add them to objects
@@ -67,23 +68,24 @@ class RSAuthenticationCallback: public RealSenseID::AuthenticationCallback{
 				auto& face = faces_[results_];
 
 				// Create new detection
-				DetectionObject newDetection;
-				newDetection.x = face.x;
-				newDetection.y = face.y;
-				newDetection.width = face.w;
-				newDetection.height = face.h;
-				newDetection.hasMask = false;
-				newDetection.id = spoof ? "Spoof": userId;
-				newDetection.confidence = 1.0;
-				detections_.push_back(newDetection);
+				DetectionObject new_detection;
+				new_detection.x = face.x;
+				new_detection.y = face.y;
+				new_detection.width = face.w;
+				new_detection.height = face.h;
+				new_detection.has_mask = false;
+				new_detection.id = spoof ? "Spoof": userId;
+				new_detection.confidence = 1.0;
+				detections_.push_back(new_detection);
 
-				ROS_DEBUG("[RealSense ID]: Detected face %u,%u %ux%u", face.x, face.y, face.w, face.h);
+				RCLCPP_DEBUG(rclcpp::get_logger("RealSenseID"), "Detected face %u,%u %ux%u", 
+							face.x, face.y, face.w, face.h);
 			}
 			results_++;
 		}
 
 		void OnHint(const RealSenseID::AuthenticateStatus hint) override{
-			ROS_DEBUG_STREAM("[RealSense ID]: Hint " << hint);
+			RCLCPP_DEBUG_STREAM(rclcpp::get_logger("RealSenseID"), "Hint " << hint);
 		}
 
 		void OnFaceDetected(const std::vector<RealSenseID::FaceRect>& faces, const unsigned int ts) override{
@@ -102,7 +104,7 @@ class RSAuthenticationCallback: public RealSenseID::AuthenticationCallback{
 	private:
 		std::vector<DetectionObject> detections_;
 		std::vector<RealSenseID::FaceRect> faces_;
-		RealSenseID::DeviceConfig deviceConfig_;
+		RealSenseID::DeviceConfig device_config_;
 		size_t results_ = 0;
 		unsigned int ts_ = 0;
 };
@@ -111,13 +113,13 @@ class RSEnrollmentCallback: public RealSenseID::EnrollmentCallback{
 	public:
 		void OnResult(const RealSenseID::EnrollStatus status) override{
 			if (status == RealSenseID::EnrollStatus::Success){
-				ROS_INFO("[RealSense ID]: Real face");
+				RCLCPP_INFO(rclcpp::get_logger("RealSenseID"), "Real face");
 			}else if (status == RealSenseID::EnrollStatus::Spoof){
-				ROS_INFO("[RealSense ID]: Spoof");
+				RCLCPP_INFO(rclcpp::get_logger("RealSenseID"), "Spoof");
 			}else if (status == RealSenseID::EnrollStatus::NoFaceDetected){
-				ROS_INFO("[RealSense ID]: NoFaceDetected");
+				RCLCPP_INFO(rclcpp::get_logger("RealSenseID"), "NoFaceDetected");
 			}else{
-				ROS_DEBUG_STREAM("[RealSense ID]: Result " << status);
+				RCLCPP_DEBUG_STREAM(rclcpp::get_logger("RealSenseID"), "Result " << status);
 			}
 
 			// Check results and add them to objects
@@ -125,26 +127,27 @@ class RSEnrollmentCallback: public RealSenseID::EnrollmentCallback{
 				auto& face = faces_[results_];
 
 				// Create new detection
-				DetectionObject newDetection;
-				newDetection.x = face.x;
-				newDetection.y = face.y;
-				newDetection.width = face.w;
-				newDetection.height = face.h;
-				newDetection.confidence = 1.0;
-				newDetection.hasMask = false;
-				detections_.push_back(newDetection);
+				DetectionObject new_detection;
+				new_detection.x = face.x;
+				new_detection.y = face.y;
+				new_detection.width = face.w;
+				new_detection.height = face.h;
+				new_detection.confidence = 1.0;
+				new_detection.has_mask = false;
+				detections_.push_back(new_detection);
 
-				ROS_DEBUG("[RealSense ID]: Detected face %u,%u %ux%u", face.x, face.y, face.w, face.h);
+				RCLCPP_DEBUG(rclcpp::get_logger("RealSenseID"), "Detected face %u,%u %ux%u", 
+							face.x, face.y, face.w, face.h);
 			}
 			results_++;
 		}
 
 		void OnProgress(const RealSenseID::FacePose pose) override{
-			ROS_DEBUG_STREAM("[RealSense ID]: Progress " << pose);
+			RCLCPP_DEBUG_STREAM(rclcpp::get_logger("RealSenseID"), "Progress " << pose);
 		}
 
 		void OnHint(const RealSenseID::EnrollStatus hint) override{
-			ROS_DEBUG_STREAM("[RealSense ID]: Hint " << hint);
+			RCLCPP_DEBUG_STREAM(rclcpp::get_logger("RealSenseID"), "Hint " << hint);
 		}
 
 		void OnFaceDetected(const std::vector<RealSenseID::FaceRect>& faces, const unsigned int ts) override{
@@ -172,8 +175,8 @@ class RSPreviewCallback: public RealSenseID::PreviewImageReadyCallback{
 		void OnPreviewImageReady(const RealSenseID::Image image){
 			// Convert to CV Mat
 			image_ = cv::Mat(image.height, image.width, CV_8UC3, image.buffer);
-
-			ROS_DEBUG_STREAM("[RealSense ID]: Preview " << image.width << "x" << image.height << " (" << image.size << "B)");
+			RCLCPP_DEBUG_STREAM(rclcpp::get_logger("RealSenseID"), "Preview " << 
+							image.width << "x" << image.height << " (" << image.size << "B)");
 		}
 
 		const cv::Mat& GetImage(){
@@ -184,4 +187,4 @@ class RSPreviewCallback: public RealSenseID::PreviewImageReadyCallback{
 		cv::Mat image_;
 };
 
-#endif
+#endif  // REALSENSE_ID_ROS__REALSENSE_CALLBACKS_HPP_

@@ -1,6 +1,6 @@
 # realsense_id_ros
 
-![ROS](https://img.shields.io/badge/ros-melodic-blue?style=for-the-badge&logo=ros&logoColor=white)
+![ROS2](https://img.shields.io/badge/ros2-galactic-purple?logo=ros&logoColor=white)
 ![License](https://img.shields.io/badge/license-Apache%202-blue?style=for-the-badge)
 
 ## Overview
@@ -16,7 +16,7 @@ Includes a dynamic reconfigure server parameter to change online the device onbo
 Also, the camera can be set to run facial authentication in a loop enabling the parameter "authenticate_loop" both in device and server mode.
 
 
-**Keywords:** ROS, Intel RealSense ID, face recognition
+**Keywords:** ROS2, Intel RealSense ID, face recognition
 
 ### License
 
@@ -24,7 +24,7 @@ The source code is released under a [Apache license 2.0](LICENSE).
 
 **Author: Alberto Tudela<br />**
 
-The realsense_id_ros package has been tested under [ROS] Melodic on [Ubuntu] 18.04. This is research code, expect that it changes often and any fitness for a particular purpose is disclaimed.
+The realsense_id_ros package has been tested under [ROS2] Galactic on [Ubuntu] 20.04. This is research code, expect that it changes often and any fitness for a particular purpose is disclaimed.
 
 ## Installation
 
@@ -32,7 +32,7 @@ The realsense_id_ros package has been tested under [ROS] Melodic on [Ubuntu] 18.
 
 #### Dependencies
 
-- [Robot Operating System (ROS)](http://wiki.ros.org) (middleware for robotics),
+- [Robot Operating System (ROS) 2](https://docs.ros.org/en/galactic/) (middleware for robotics),
 - [Intel RealSense ID SDK v0.25](https://github.com/IntelRealSense/RealSenseID) 
 
 Build the Intel RealSense ID SDK as follows:
@@ -50,19 +50,17 @@ $ sudo make install
 
 To build from source, clone the latest version from this repository into your catkin workspace and compile the package using
 
-```console
-$ cd catkin_workspace/src
-$ git clone https://github.com/ajtudela/realsense_id_ros.git
-$ cd ../
-$ rosdep install --from-paths . --ignore-src
-$ catkin_make
-```
+	cd colcon_workspace/src
+	git clone https://github.com/ajtudela/realsense_id_ros.git -b galactic
+	cd ../
+	rosdep install -i --from-path src --rosdistro galactic -y
+	colcon build --symlink-install
 
 ## Usage
 
 To start the camera node in ROS:
 
-	rosrun realsense_id_ros realsense_id_ros_node
+	ros2 realsense_id_ros realsense_id_ros_node
 
 ## Nodes
 
@@ -90,49 +88,49 @@ Camera node to perform facial recognition.
 
 	Perform one authentication on the device or on the server. Returns an array of faces with users id and an image of the faces. For example, you can trigger the computation from the console with
 
-		rosservice call /realsense_id_ros_node/authenticate
-
-* **`cancel_authentication_loop`** ([std_srvs/Empty])
-
-	Cancel the authentication loop. For example, you can trigger the computation from the console with
-
-		rosservice call /realsense_id_ros_node/cancel_authentication_loop
+		ros2 interface call /realsense_id_ros_node/authenticate
 
 * **`device_info`** ([realsense_id_ros/DeviceInfo])
 
 	Get information of the device. on the server. For example, you can trigger the computation from the console with
 
-		rosservice call /realsense_id_ros_node/device_info
+		ros2 interface call /realsense_id_ros_node/device_info
 
 * **`enroll`** ([realsense_id_ros/Enroll])
 
 	Perform one enrollment for one new user on the device or on the server. Returns an array of faces with image of the faces. For example, you can trigger the computation from the console with
 
-		rosservice call /realsense_id_ros_node/enroll
+		ros2 interface call /realsense_id_ros_node/enroll
 
 * **`remove_user`** ([realsense_id_ros/RemoveUser])
 
 	Remove an user from the device or from the server database. For example, you can trigger the computation from the console with
 
-		rosservice call /realsense_id_ros_node/remove_user
+		ros2 interface call /realsense_id_ros_node/remove_user
 
-* **`remove_all`** ([std_srvs/Empty])
+* **`remove_all_users`** ([realsense_id_ros/RemoveAllUsers])
 
 	Remove all users from the device or from the server database. For example, you can trigger the computation from the console with
 
-		rosservice call /realsense_id_ros_node/remove_all
+		ros2 interface call /realsense_id_ros_node/remove_all
 
-* **`start_authentication_loop`** ([std_srvs/Empty])
+* **`start_authentication_loop`** ([realsense_id_ros/StartAuthenticationLoop])
 
 	Start authentication in a loop. For example, you can trigger the computation from the console with
 
-		rosservice call /realsense_id_ros_node/start_authentication_loop
+		ros2 interface call /realsense_id_ros_node/start_authentication_loop
+
+* **`stop_authentication_loop`** ([realsense_id_ros/StopAuthenticationLoop])
+
+	Stop the authentication loop. For example, you can trigger the computation from the console with
+
+		ros2 interface call /realsense_id_ros_node/cancel_authentication_loop
 
 * **`query_users_id`** ([realsense_id_ros/QueryUsersId])
 
 	Query the ids of the users. Returns the number of users and an array of ids. For example, you can trigger the computation from the console with
 
-		rosservice call /realsense_id_ros_node/query_users_id
+		ros2 interface call /realsense_id_ros_node/query_users_id
 
 #### Parameters
 
@@ -144,11 +142,13 @@ Camera node to perform facial recognition.
 
 	Option to manage a faceprints database on the host or the server.
 
+* **`database`** (string, default: "")
+
+	Path to the database folder.
+
 * **`authenticate_loop`** (bool, default: "false")
 
 	Runs authentication in a loop.
-
-#### Reconfigure Parameters
 
 * **`camera_rotation`** (int, default: "0")
 
@@ -186,16 +186,19 @@ Camera node to perform facial recognition.
 - [x] Option to use authentication loop with published topics.
 - [x] Dynamic reconfigure server.
 - [ ] Extract features from RGB image.
+- [ ] Add mutex.
 
 [Intel RealSense ID]: https://www.intelrealsense.com/facial-authentication/
 [Ubuntu]: https://ubuntu.com/
-[ROS]: http://www.ros.org
-[std_srvs/Empty]: http://docs.ros.org/api/std_srvs/html/srv/Empty.html
-[sensor_msgs/CameraInfo]: http://docs.ros.org/api/sensor_msgs/html/msg/CameraInfo.html
-[sensor_msgs/Image]: http://docs.ros.org/api/sensor_msgs/html/msg/Image.html
+[ROS2]: https://docs.ros.org/en/galactic/
+[sensor_msgs/CameraInfo]: http://docs.ros2.org/galactic/api/sensor_msgs/msg/CameraInfo.html
+[sensor_msgs/Image]: http://docs.ros2.org/galactic/api/sensor_msgs/msg/Image.html
 [realsense_id_ros/FaceArray]: /msg/FaceArray.msg
 [realsense_id_ros/Authenticate]: /srv/Authenticate.srv
 [realsense_id_ros/DeviceInfo]: /srv/DeviceInfo.srv
 [realsense_id_ros/Enroll]: /srv/Enroll.srv
 [realsense_id_ros/RemoveUser]: /srv/RemoveUser.srv
+[realsense_id_ros/RemoveAllUsers]: /srv/RemoveAllUsers.srv
 [realsense_id_ros/QueryUsersId]: /srv/QueryUsersId.srv
+[realsense_id_ros/StartAuthenticationLoop]: /srv/StartAuthenticationLoop.srv
+[realsense_id_ros/StopAuthenticationLoop]: /srv/StopAuthenticationLoop.srv

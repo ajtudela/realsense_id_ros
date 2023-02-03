@@ -1,7 +1,7 @@
 /*
  * DETECTION OBJECT STRUCT
  *
- * Copyright (c) 2021 Alberto José Tudela Roldán <ajtudela@gmail.com>
+ * Copyright (c) 2021-2023 Alberto José Tudela Roldán <ajtudela@gmail.com>
  * 
  * This file is part of realsense_id_ros project.
  * 
@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef DETECTION_OBJECT_H
-#define DETECTION_OBJECT_H
+#ifndef REALSENSE_ID_ROS__DETECTION_OBJECT_HPP_
+#define REALSENSE_ID_ROS__DETECTION_OBJECT_HPP_
 
 // C++
 #include <string>
@@ -20,16 +20,17 @@
 #include <cv_bridge/cv_bridge.h>
 
 // ROS
-#include <ros/ros.h>
-#include <std_msgs/Header.h>
+#include "std_msgs/msg/header.hpp"
+
+#include "realsense_id_ros/msg/face.hpp"
 
 struct DetectionObject{
 	size_t x, y, width, height;
 	float confidence;
 	std::string id;
-	bool hasMask;
+	bool has_mask;
 
-	void sanitizeSize(const size_t& imageWidth, const size_t& imageHeight){
+	void sanitize_size(const size_t& imageWidth, const size_t& imageHeight){
 		x = (x < 0) ? 0 : x;
 		y = (y < 0) ? 0 : y;
 		width = ((x + width) > imageWidth) ? (imageWidth - x) : width;
@@ -37,14 +38,14 @@ struct DetectionObject{
 	}
 
 	/* Create a Face msg */
-	realsense_id_ros::Face toFace(std_msgs::Header header, cv::Mat image){
-		realsense_id_ros::Face face;
+	realsense_id_ros::msg::Face to_msg(const std_msgs::msg::Header & header, const cv::Mat & image){
+		realsense_id_ros::msg::Face face;
 
 		// Header, id and confidence
 		face.header = header;
 		face.id = id;
 		face.confidence = confidence;
-		face.has_mask = hasMask;
+		face.has_mask = has_mask;
 
 		// 2D bounding box surrounding the object
 		face.bbox.center.x = x + width / 2;
@@ -54,17 +55,15 @@ struct DetectionObject{
 
 		// The 2D data that generated these results
 		if (!image.empty()){
-			cv::Mat croppedImage = image(cv::Rect(x, y, width, height));
-			cv_bridge::CvImage cvImageBr;
-			cvImageBr.header.frame_id = header.frame_id;
-			cvImageBr.header.stamp = ros::Time::now();
-			cvImageBr.encoding = sensor_msgs::image_encodings::RGB8;
-			cvImageBr.image = croppedImage;
-			cvImageBr.toImageMsg(face.source_img);
+			cv_bridge::CvImage output_msg;
+			output_msg.header = header;
+			output_msg.encoding = sensor_msgs::image_encodings::RGB8;
+			output_msg.image = cv::Mat(image, cv::Rect(x, y, width, height));
+			face.source_img = *output_msg.toImageMsg();
 		}
 
 		return face;
 	}
 };
 
-#endif
+#endif  // REALSENSE_ID_ROS__DETECTION_OBJECT_HPP

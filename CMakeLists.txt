@@ -1,5 +1,29 @@
-cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION 3.8)
 project(realsense_id_ros)
+
+# Default to C++17
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 17)
+endif()
+
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
+################################################
+## Find  dependencies                         ##
+################################################
+## Find ament macros and libraries
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
+find_package(builtin_interfaces REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(vision_msgs REQUIRED)
+find_package(nav2_util REQUIRED)
+find_package(cv_bridge REQUIRED)
+find_package(OpenCV REQUIRED COMPONENTS core highgui)
 
 # RealSense ID
 find_package(rsid "0.25.0" EXACT REQUIRED PATHS "/opt/RealSenseID/lib64/cmake")
@@ -7,140 +31,91 @@ SET(rsid_INCLUDE_DIRS "/opt/RealSenseID/include")
 SET(rsid_LIBS_DIRS "/opt/RealSenseID/lib64")
 FIND_LIBRARY(rsid_LIBRARIES rsid ${rsid_LIBS_DIRS})
 
-# OpenCV
-find_package(OpenCV 3 REQUIRED COMPONENTS core highgui)
-
-## Find catkin macros and libraries
-## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
-## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  std_msgs
-  sensor_msgs
-  vision_msgs
-  cv_bridge
-  message_generation
-  dynamic_reconfigure
-)
-
-################################################
-## Declare ROS dynamic reconfigure parameters ##
-################################################
-generate_dynamic_reconfigure_options(
-    cfg/RealSenseIDParameters.cfg
-)
-
 ################################################
 ## Declare ROS messages, services and actions ##
 ################################################
-
-## Generate messages in the 'msg' folder
-add_message_files(
-  FILES
-  Face.msg
-  FaceArray.msg
+set(msg_files
+  "msg/Face.msg"
+  "msg/FaceArray.msg"
+)
+set(srv_files
+  "srv/Authenticate.srv"
+  "srv/DeviceInfo.srv"
+  "srv/Enroll.srv"
+  "srv/RemoveUser.srv"
+  "srv/RemoveAllUsers.srv"
+  "srv/QueryUsersId.srv"
+  "srv/StartAuthenticationLoop.srv"
+  "srv/StopAuthenticationLoop.srv"
 )
 
-## Generate services in the 'srv' folder
-add_service_files(
-  FILES
-  Authenticate.srv
-  DeviceInfo.srv
-  Enroll.srv
-  RemoveUser.srv
-  QueryUsersId.srv
-)
-
-## Generate added messages and services with any dependencies listed here
-generate_messages(
-  DEPENDENCIES
-  std_msgs
-  sensor_msgs
-  vision_msgs
-)
-
-################################################
-## Declare ROS dynamic reconfigure parameters ##
-################################################
-
-## Generate dynamic reconfigure parameters in the 'cfg' folder
-# generate_dynamic_reconfigure_options(
-#   cfg/DynReconf1.cfg
-#   cfg/DynReconf2.cfg
-# )
-
-###################################
-## catkin specific configuration ##
-###################################
-catkin_package(
- INCLUDE_DIRS include
- CATKIN_DEPENDS roscpp std_msgs sensor_msgs vision_msgs cv_bridge message_runtime
+rosidl_generate_interfaces(${PROJECT_NAME}
+  ${msg_files}
+  ${srv_files}
+  DEPENDENCIES builtin_interfaces std_msgs sensor_msgs vision_msgs
 )
 
 ###########
 ## Build ##
 ###########
-
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
- include
- ${catkin_INCLUDE_DIRS}
- ${rsid_INCLUDE_DIRS}
+  include
+  ${rsid_INCLUDE_DIRS}
 )
 
-# Set SOURCES
-set(SOURCES
-    src/realsense_id_ros.cpp
-    src/realsense_id_ros_node.cpp
+# executable node
+add_executable(realsense_id_ros_node
+  src/realsense_id_ros.cpp
+  src/realsense_id_ros_node.cpp
 )
-
-## Declare a C++ executable
-## With catkin_make all packages are built within a single CMake context
-## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME} ${SOURCES})
-add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-## Specify libraries to link a library or executable target against
-target_link_libraries(${PROJECT_NAME}
-  ${catkin_LIBRARIES}
-  ${rsid_LIBRARIES}
+ament_target_dependencies(realsense_id_ros_node
+  rclcpp
+  std_msgs 
+  sensor_msgs
+  vision_msgs
+  cv_bridge
+  nav2_util
+)
+target_link_libraries(realsense_id_ros_node
   ${OpenCV_LIBRARIES}
+  ${rsid_LIBRARIES}
+  #${cpp_typesupport_target} # Add if Humble
 )
+# Deprecated as of Humble. Fix with the comment below
+rosidl_target_interfaces(realsense_id_ros_node ${PROJECT_NAME} "rosidl_typesupport_cpp") # Remove if Humble
+#rosidl_get_typesupport_target(cpp_typesupport_target "${PROJECT_NAME}" "rosidl_typesupport_cpp") # Add if Humble
 
 #############
 ## Install ##
 #############
-
-# Mark executables and/or libraries for installation
-install(TARGETS ${PROJECT_NAME}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+install(TARGETS realsense_id_ros_node
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
-## Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-  FILES_MATCHING PATTERN "*.h"
-  PATTERN ".svn" EXCLUDE
+  DESTINATION include/${PROJECT_NAME}
+  FILES_MATCHING PATTERN "*.hpp"
+#   PATTERN ".svn" EXCLUDE
 )
 
-## Mark launch files for installation
-install(DIRECTORY launch/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
-  FILES_MATCHING PATTERN "*.launch"
+install(DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}/
+)
+
+install(DIRECTORY params
+  DESTINATION share/${PROJECT_NAME}/
 )
 
 #############
 ## Testing ##
 #############
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  ament_lint_auto_find_test_dependencies()
+endif()
 
-## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_realsense_id.cpp)
-# if(TARGET ${PROJECT_NAME}-test)
-#   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
-# endif()
-
-## Add folders to be run by python nosetests
-# catkin_add_nosetests(test)
+ament_package()
