@@ -167,8 +167,8 @@ class RSAuthFaceprintsCallback: public RealSenseID::AuthFaceprintsExtractionCall
 		}
 
 	private:
-		RSFaceprintsDatabase faceprints_db_;
 		RealSenseID::FaceAuthenticator* authenticator_;
+		RSFaceprintsDatabase faceprints_db_;
 		std::vector<DetectionObject> detections_;
 		std::vector<RealSenseID::FaceRect> faces_;
 		size_t results_ = 0;
@@ -250,8 +250,8 @@ class RSEnrollFaceprintsCallback: public RealSenseID::EnrollFaceprintsExtraction
 		}
 
 	private:
-		RSFaceprintsDatabase faceprints_db_;
 		std::string user_id_;
+		RSFaceprintsDatabase faceprints_db_;
 		std::vector<DetectionObject> detections_;
 		std::vector<RealSenseID::FaceRect> faces_;
 		size_t results_ = 0;

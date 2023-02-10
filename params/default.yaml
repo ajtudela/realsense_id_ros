@@ -1,5 +1,0 @@
-realsense_id_ros:
-  serial_port: "/dev/ttyACM0"
-  authenticate_loop: false
-  server_mode: false
-  database_filepath: ""

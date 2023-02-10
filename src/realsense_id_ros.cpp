@@ -107,6 +107,8 @@ RealSenseIDROS::RealSenseIDROS() : Node("realsense_id_ros"), running_(false){
 		std::shared_ptr<realsense_id_ros::srv::StartAuthenticationLoop::Response> response;
 		start_authentication_loop(request, response);
 	}
+
+	preview_.reset();
 }
 
 /* Delete all parameteres-> */
@@ -164,7 +166,7 @@ void RealSenseIDROS::get_params(){
 	}else if (camera_rotation == 270){
 		device_config_.camera_rotation = RealSenseID::DeviceConfig::CameraRotation::Rotation_270_Deg;
 	}
-	RCLCPP_INFO(this->get_logger(), "The parameter camera_rotation is set to: [%d]", device_config_.camera_rotation);
+	RCLCPP_INFO(this->get_logger(), "The parameter camera_rotation is set to: [%d]", camera_rotation);
 
 	// STRING PARAMS ..........................................................................
 	nav2_util::declare_parameter_if_not_declared(this, "serial_port", rclcpp::ParameterValue("/dev/ttyACM0"), 
@@ -198,7 +200,7 @@ void RealSenseIDROS::get_params(){
 		device_config_.security_level = RealSenseID::DeviceConfig::SecurityLevel::Low;
 	}
 	
-	RCLCPP_INFO(this->get_logger(), "The parameter security_level is set to: [%s]", device_config_.security_level);
+	RCLCPP_INFO(this->get_logger(), "The parameter security_level is set to: [%s]", security_level);
 
 	nav2_util::declare_parameter_if_not_declared(this, "algo_flow", rclcpp::ParameterValue("all"), 
 							rcl_interfaces::msg::ParameterDescriptor()
@@ -214,7 +216,7 @@ void RealSenseIDROS::get_params(){
 	}else if (algo_flow.find("recognition") != std::string::npos){
 		device_config_.algo_flow = RealSenseID::DeviceConfig::AlgoFlow::RecognitionOnly;
 	}
-	RCLCPP_INFO(this->get_logger(), "The parameter algo_flow is set to: [%s]", device_config_.algo_flow);
+	RCLCPP_INFO(this->get_logger(), "The parameter algo_flow is set to: [%s]", algo_flow);
 
 	nav2_util::declare_parameter_if_not_declared(this, "face_selection_policy", rclcpp::ParameterValue("all"), 
 							rcl_interfaces::msg::ParameterDescriptor()
@@ -227,7 +229,7 @@ void RealSenseIDROS::get_params(){
 	}else if (face_selection_policy.find("all") != std::string::npos){
 		device_config_.face_selection_policy = RealSenseID::DeviceConfig::FaceSelectionPolicy::All;
 	}
-	RCLCPP_INFO(this->get_logger(), "The parameter face_selection_policy is set to: [%s]", device_config_.face_selection_policy);
+	RCLCPP_INFO(this->get_logger(), "The parameter face_selection_policy is set to: [%s]", face_selection_policy);
 
 	nav2_util::declare_parameter_if_not_declared(this, "dump_mode", rclcpp::ParameterValue("none"), 
 							rcl_interfaces::msg::ParameterDescriptor()
@@ -241,7 +243,7 @@ void RealSenseIDROS::get_params(){
 	}else if (dump_mode.find("fullframe") != std::string::npos){
 		device_config_.dump_mode = RealSenseID::DeviceConfig::DumpMode::FullFrame;
 	}
-	RCLCPP_INFO(this->get_logger(), "The parameter dump_mode is set to: [%s]", device_config_.dump_mode);
+	RCLCPP_INFO(this->get_logger(), "The parameter dump_mode is set to: [%s]", dump_mode);
 
 	nav2_util::declare_parameter_if_not_declared(this, "matcher_confidence_level", rclcpp::ParameterValue("high"), 
 							rcl_interfaces::msg::ParameterDescriptor()
@@ -255,7 +257,7 @@ void RealSenseIDROS::get_params(){
 	}else if (matcher_confidence_level.find("low") != std::string::npos){
 		device_config_.matcher_confidence_level = RealSenseID::DeviceConfig::MatcherConfidenceLevel::Low;
 	}
-	RCLCPP_INFO(this->get_logger(), "The parameter matcher_confidence_level is set to: [%s]", device_config_.matcher_confidence_level);
+	RCLCPP_INFO(this->get_logger(), "The parameter matcher_confidence_level is set to: [%s]", matcher_confidence_level);
 
 	auto status = authenticator_.SetDeviceConfig(device_config_);
 	if (status != RealSenseID::Status::Ok){
@@ -390,11 +392,11 @@ void RealSenseIDROS::log_callback(RealSenseID::LogLevel level, const char* msg){
 /* Authenticate loop */
 void RealSenseIDROS::authenticate_loop(){
 	if (!server_mode_){
-		auto status = authenticator_.AuthenticateLoop(auth_clbk_);
+		authenticator_.AuthenticateLoop(auth_clbk_);
 	}else{
 		auth_face_clbk_.setAuthenticator(&authenticator_);
 		auth_face_clbk_.setFaceprintsDatabase(faceprints_db_.data);
-		auto status = authenticator_.ExtractFaceprintsForAuthLoop(auth_face_clbk_);
+		authenticator_.ExtractFaceprintsForAuthLoop(auth_face_clbk_);
 	}
 }
 

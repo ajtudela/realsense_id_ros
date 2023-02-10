@@ -31,8 +31,6 @@ struct DetectionObject{
 	bool has_mask;
 
 	void sanitize_size(const size_t& imageWidth, const size_t& imageHeight){
-		x = (x < 0) ? 0 : x;
-		y = (y < 0) ? 0 : y;
 		width = ((x + width) > imageWidth) ? (imageWidth - x) : width;
 		height = ((y + height) > imageHeight) ? (imageHeight - y) : height;
 	}
