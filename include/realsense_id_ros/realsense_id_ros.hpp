@@ -51,7 +51,6 @@ class RealSenseIDROS: public rclcpp::Node{
 	public:
 		RealSenseIDROS();
 		~RealSenseIDROS();
-		void update();
 
 	private:
 		rclcpp::Publisher<realsense_id_ros::msg::FaceArray>::SharedPtr faces_pub_;
@@ -70,7 +69,6 @@ class RealSenseIDROS: public rclcpp::Node{
 		rclcpp::Service<realsense_id_ros::srv::QueryUsersId>::SharedPtr query_users_service_;
 
 		OnSetParametersCallbackHandle::SharedPtr callback_handle_;
-		//std::vector<rclcpp::Parameter> lastConfig_, defaultConfig_;
 
 		sensor_msgs::msg::CameraInfo camera_info_;
 		std::thread auth_loop_thread_;
@@ -93,6 +91,7 @@ class RealSenseIDROS: public rclcpp::Node{
 
 		void get_params();
 		void authenticate_loop();
+		void update();
 		void log_callback(RealSenseID::LogLevel level, const char* msg);
 		rcl_interfaces::msg::SetParametersResult parameters_callback(const std::vector<rclcpp::Parameter> &parameters);
 

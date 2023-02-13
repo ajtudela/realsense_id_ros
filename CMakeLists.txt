@@ -23,13 +23,7 @@ find_package(sensor_msgs REQUIRED)
 find_package(vision_msgs REQUIRED)
 find_package(nav2_util REQUIRED)
 find_package(cv_bridge REQUIRED)
-find_package(OpenCV REQUIRED COMPONENTS core highgui)
-
-# RealSense ID
-find_package(rsid "0.25.0" EXACT REQUIRED PATHS "/opt/RealSenseID/lib64/cmake")
-SET(rsid_INCLUDE_DIRS "/opt/RealSenseID/include")
-SET(rsid_LIBS_DIRS "/opt/RealSenseID/lib64")
-FIND_LIBRARY(rsid_LIBRARIES rsid ${rsid_LIBS_DIRS})
+find_package(rsid "0.25.0" EXACT REQUIRED)
 
 ################################################
 ## Declare ROS messages, services and actions ##
@@ -62,7 +56,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 ## Your package locations should be listed before other locations
 include_directories(
   include
-  ${rsid_INCLUDE_DIRS}
+  rsid
 )
 
 # executable node
@@ -79,8 +73,8 @@ ament_target_dependencies(realsense_id_ros_node
   nav2_util
 )
 target_link_libraries(realsense_id_ros_node
-  ${OpenCV_LIBRARIES}
-  ${rsid_LIBRARIES}
+  rsid
+  rsid_c
   #${cpp_typesupport_target} # Add if Humble
 )
 # Deprecated as of Humble. Fix with the comment below

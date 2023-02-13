@@ -23,6 +23,7 @@
 #include <RealSenseID/AuthenticateStatus.h>
 #include <RealSenseID/EnrollFaceprintsExtractionCallback.h>
 #include <RealSenseID/EnrollStatus.h>
+#include <RealSenseID/FaceAuthenticator.h>
 #include <RealSenseID/FacePose.h>
 
 // ROS
