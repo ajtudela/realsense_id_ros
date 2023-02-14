@@ -186,7 +186,8 @@ Camera node to perform facial recognition.
 - [x] Option to use authentication loop with published topics.
 - [x] Dynamic reconfigure server.
 - [ ] Extract features from RGB image.
-- [ ] Add mutex.
+- [ ] Add mutex to the captured image.
+- [ ] Fix "No UVC devices found" on Ubuntu 20.04.
 
 [Intel RealSense ID]: https://www.intelrealsense.com/facial-authentication/
 [Ubuntu]: https://ubuntu.com/

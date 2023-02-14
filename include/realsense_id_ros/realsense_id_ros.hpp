@@ -79,7 +79,6 @@ class RealSenseIDROS: public rclcpp::Node{
 		rclcpp::TimerBase::SharedPtr timer_;
 
 		// RealSense ID
-		RealSenseID::FaceAuthenticator authenticator_;
 		RealSenseID::SerialConfig serial_config_;
 		RealSenseID::DeviceConfig device_config_;
 		RealSenseID::PreviewConfig preview_config_;
@@ -88,6 +87,7 @@ class RealSenseIDROS: public rclcpp::Node{
 		RSAuthFaceprintsCallback auth_face_clbk_;
 		FaceprintsDatabase faceprints_db_;
 		std::unique_ptr<RealSenseID::Preview> preview_;
+		std::shared_ptr<RealSenseID::FaceAuthenticator> authenticator_;
 
 		void get_params();
 		void authenticate_loop();
