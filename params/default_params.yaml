@@ -1,4 +1,4 @@
-realsense_id_ros:
+realsense_id:
   ros__parameters:
     serial_port: "/dev/ttyACM0"
     authenticate_loop: false

@@ -45,6 +45,13 @@ RealSenseIDROS::RealSenseIDROS() : Node("realsense_id_ros"), running_(false){
 		RCLCPP_DEBUG_STREAM(this->get_logger(), "Opening serial port " << port_.c_str());
 	}
 
+	// Set device config
+	auto status = authenticator_.SetDeviceConfig(device_config_);
+	if (status != RealSenseID::Status::Ok){
+		RCLCPP_ERROR(this->get_logger(), "Failed to apply device settings!");
+		authenticator_.Disconnect();
+	}
+
 	// Callback for monitor changes in parameters
 	callback_handle_ = this->add_on_set_parameters_callback(
 						std::bind(&RealSenseIDROS::parameters_callback, this, std::placeholders::_1));
@@ -200,7 +207,7 @@ void RealSenseIDROS::get_params(){
 		device_config_.security_level = RealSenseID::DeviceConfig::SecurityLevel::Low;
 	}
 	
-	RCLCPP_INFO(this->get_logger(), "The parameter security_level is set to: [%s]", security_level);
+	RCLCPP_INFO(this->get_logger(), "The parameter security_level is set to: [%s]", security_level.c_str());
 
 	nav2_util::declare_parameter_if_not_declared(this, "algo_flow", rclcpp::ParameterValue("all"), 
 							rcl_interfaces::msg::ParameterDescriptor()
@@ -216,7 +223,7 @@ void RealSenseIDROS::get_params(){
 	}else if (algo_flow.find("recognition") != std::string::npos){
 		device_config_.algo_flow = RealSenseID::DeviceConfig::AlgoFlow::RecognitionOnly;
 	}
-	RCLCPP_INFO(this->get_logger(), "The parameter algo_flow is set to: [%s]", algo_flow);
+	RCLCPP_INFO(this->get_logger(), "The parameter algo_flow is set to: [%s]", algo_flow.c_str());
 
 	nav2_util::declare_parameter_if_not_declared(this, "face_selection_policy", rclcpp::ParameterValue("all"), 
 							rcl_interfaces::msg::ParameterDescriptor()
@@ -229,7 +236,7 @@ void RealSenseIDROS::get_params(){
 	}else if (face_selection_policy.find("all") != std::string::npos){
 		device_config_.face_selection_policy = RealSenseID::DeviceConfig::FaceSelectionPolicy::All;
 	}
-	RCLCPP_INFO(this->get_logger(), "The parameter face_selection_policy is set to: [%s]", face_selection_policy);
+	RCLCPP_INFO(this->get_logger(), "The parameter face_selection_policy is set to: [%s]", face_selection_policy.c_str());
 
 	nav2_util::declare_parameter_if_not_declared(this, "dump_mode", rclcpp::ParameterValue("none"), 
 							rcl_interfaces::msg::ParameterDescriptor()
@@ -243,7 +250,7 @@ void RealSenseIDROS::get_params(){
 	}else if (dump_mode.find("fullframe") != std::string::npos){
 		device_config_.dump_mode = RealSenseID::DeviceConfig::DumpMode::FullFrame;
 	}
-	RCLCPP_INFO(this->get_logger(), "The parameter dump_mode is set to: [%s]", dump_mode);
+	RCLCPP_INFO(this->get_logger(), "The parameter dump_mode is set to: [%s]", dump_mode.c_str());
 
 	nav2_util::declare_parameter_if_not_declared(this, "matcher_confidence_level", rclcpp::ParameterValue("high"), 
 							rcl_interfaces::msg::ParameterDescriptor()
@@ -257,13 +264,7 @@ void RealSenseIDROS::get_params(){
 	}else if (matcher_confidence_level.find("low") != std::string::npos){
 		device_config_.matcher_confidence_level = RealSenseID::DeviceConfig::MatcherConfidenceLevel::Low;
 	}
-	RCLCPP_INFO(this->get_logger(), "The parameter matcher_confidence_level is set to: [%s]", matcher_confidence_level);
-
-	auto status = authenticator_.SetDeviceConfig(device_config_);
-	if (status != RealSenseID::Status::Ok){
-		RCLCPP_ERROR(this->get_logger(), "Failed to apply device settings!");
-		authenticator_.Disconnect();
-	}
+	RCLCPP_INFO(this->get_logger(), "The parameter matcher_confidence_level is set to: [%s]", matcher_confidence_level.c_str());
 }
 
 /* Reconfigure callback. */
@@ -277,15 +278,15 @@ rcl_interfaces::msg::SetParametersResult RealSenseIDROS::parameters_callback(con
 		// BOOLEAN PARAMS ..........................................................................
 		if (param.get_name() == "authenticate_loop" && param.get_type() == rclcpp::ParameterType::PARAMETER_BOOL){
 				auth_loop_mode_ = param.as_bool();
-				RCLCPP_INFO(this->get_logger(), "The parameter authenticate_loop is set to: [%d]", auth_loop_mode_);
+				RCLCPP_INFO(this->get_logger(), "The parameter authenticate_loop is set to: [%d]", auth_loop_mode_ ? "true" : "false");
 		}
 		if (param.get_name() == "server_mode" && param.get_type() == rclcpp::ParameterType::PARAMETER_BOOL){
 				server_mode_ = param.as_bool();
-				RCLCPP_INFO(this->get_logger(), "The parameter server_mode is set to: [%d]", server_mode_);
+				RCLCPP_INFO(this->get_logger(), "The parameter server_mode is set to: [%d]", server_mode_ ? "true" : "false");
 		}
 		if (param.get_name() == "restore_defaults" && param.get_type() == rclcpp::ParameterType::PARAMETER_BOOL){
 				restore_ = param.as_bool();
-				RCLCPP_INFO(this->get_logger(), "The parameter restore_defaults is set to: [%d]", restore_);
+				RCLCPP_INFO(this->get_logger(), "The parameter restore_defaults is set to: [%d]", restore_ ? "true" : "false");
 		}
 		// INTEGER PARAMS ..........................................................................
 		if (param.get_name() == "camera_rotation" && param.get_type() == rclcpp::ParameterType::PARAMETER_INTEGER){

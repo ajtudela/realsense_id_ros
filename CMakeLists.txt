@@ -25,6 +25,10 @@ find_package(nav2_util REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(rsid "0.25.0" EXACT REQUIRED)
 
+SET(rsid_INCLUDE_DIRS "/opt/RealSenseID/include")
+SET(rsid_LIBS_DIRS "/opt/RealSenseID/lib64")
+FIND_LIBRARY(rsid_LIBRARIES rsid ${rsid_LIBS_DIRS})
+
 ################################################
 ## Declare ROS messages, services and actions ##
 ################################################
@@ -56,7 +60,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 ## Your package locations should be listed before other locations
 include_directories(
   include
-  rsid
+  ${rsid_INCLUDE_DIRS}
 )
 
 # executable node
@@ -73,8 +77,7 @@ ament_target_dependencies(realsense_id_ros_node
   nav2_util
 )
 target_link_libraries(realsense_id_ros_node
-  rsid
-  rsid_c
+  ${rsid_LIBRARIES}
   #${cpp_typesupport_target} # Add if Humble
 )
 # Deprecated as of Humble. Fix with the comment below
