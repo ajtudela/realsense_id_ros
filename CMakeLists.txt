@@ -23,8 +23,9 @@ find_package(sensor_msgs REQUIRED)
 find_package(vision_msgs REQUIRED)
 find_package(nav2_util REQUIRED)
 find_package(cv_bridge REQUIRED)
-find_package(rsid "0.25.0" EXACT REQUIRED)
+find_package(rsid "0.25.0" EXACT REQUIRED PATHS "/opt/RealSenseID/lib64/cmake")
 
+# RealSense ID
 SET(rsid_INCLUDE_DIRS "/opt/RealSenseID/include")
 SET(rsid_LIBS_DIRS "/opt/RealSenseID/lib64")
 FIND_LIBRARY(rsid_LIBRARIES rsid ${rsid_LIBS_DIRS})
