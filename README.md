@@ -46,6 +46,12 @@ $ cmake .. -DRSID_PREVIEW=1 -DRSID_DEBUG_CONSOLE=OFF -DRSID_INSTALL=ON
 $ make -j
 $ sudo make install
 ```
+
+After, Intel RealsenseID permissions script from root directory:
+```console
+./scripts/setup_udev_rules.sh
+```
+
 #### Building
 
 To build from source, clone the latest version from this repository into your catkin workspace and compile the package using
