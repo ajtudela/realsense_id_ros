@@ -279,15 +279,15 @@ rcl_interfaces::msg::SetParametersResult RealSenseIDROS::parameters_callback(con
 		// BOOLEAN PARAMS ..........................................................................
 		if (param.get_name() == "authenticate_loop" && param.get_type() == rclcpp::ParameterType::PARAMETER_BOOL){
 				auth_loop_mode_ = param.as_bool();
-				RCLCPP_INFO(this->get_logger(), "The parameter authenticate_loop is set to: [%d]", auth_loop_mode_ ? "true" : "false");
+				RCLCPP_INFO(this->get_logger(), "The parameter authenticate_loop is set to: [%s]", auth_loop_mode_ ? "true" : "false");
 		}
 		if (param.get_name() == "server_mode" && param.get_type() == rclcpp::ParameterType::PARAMETER_BOOL){
 				server_mode_ = param.as_bool();
-				RCLCPP_INFO(this->get_logger(), "The parameter server_mode is set to: [%d]", server_mode_ ? "true" : "false");
+				RCLCPP_INFO(this->get_logger(), "The parameter server_mode is set to: [%s]", server_mode_ ? "true" : "false");
 		}
 		if (param.get_name() == "restore_defaults" && param.get_type() == rclcpp::ParameterType::PARAMETER_BOOL){
 				restore_ = param.as_bool();
-				RCLCPP_INFO(this->get_logger(), "The parameter restore_defaults is set to: [%d]", restore_ ? "true" : "false");
+				RCLCPP_INFO(this->get_logger(), "The parameter restore_defaults is set to: [%s]", restore_ ? "true" : "false");
 		}
 		// INTEGER PARAMS ..........................................................................
 		if (param.get_name() == "camera_rotation" && param.get_type() == rclcpp::ParameterType::PARAMETER_INTEGER){
