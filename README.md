@@ -174,6 +174,7 @@ Camera node to perform facial recognition.
 - [x] Dynamic reconfigure server.
 - [ ] Extract features from RGB image.
 - [x] Add mutex to the captured image.
+- [ ] Convert nodes to LifeCycleNodes.
 
 [Intel RealSense ID]: https://www.intelrealsense.com/facial-authentication/
 [Ubuntu]: https://ubuntu.com/
