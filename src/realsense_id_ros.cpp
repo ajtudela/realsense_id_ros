@@ -95,7 +95,7 @@ RealSenseIDROS::RealSenseIDROS() : Node("realsense_id_ros"){
 	camera_info_pub_        = this->create_publisher<sensor_msgs::msg::CameraInfo>("camera_info", 1);
 
 	// And timer
-	timer_ = this->create_wall_timer(std::chrono::milliseconds(30), std::bind(&RealSenseIDROS::update, this));
+	timer_ = this->create_wall_timer(std::chrono::milliseconds(60), std::bind(&RealSenseIDROS::update, this));
 
 	// Load the database from a file
 	if (server_mode_){
@@ -105,7 +105,9 @@ RealSenseIDROS::RealSenseIDROS() : Node("realsense_id_ros"){
 		}
 	}
 
-	preview_.reset();
+	// Start preview
+	preview_ = std::make_unique<RealSenseID::Preview>(preview_config_);
+	preview_->StartPreview(preview_clbk_);
 }
 
 /* Delete all parameteres-> */
@@ -116,8 +118,6 @@ RealSenseIDROS::~RealSenseIDROS(){
 	// Disconnect from the device
 	authenticator_->Disconnect();
 
-	// Stop preview
-	preview_->StopPreview();
 }
 
 /* Update parameters of the node. */
@@ -505,10 +505,6 @@ bool RealSenseIDROS::authenticate_service(const std::shared_ptr<realsense_id_ros
 
 	bool success = false;
 
-	// Start preview
-	preview_ = std::make_unique<RealSenseID::Preview>(preview_config_);
-	preview_->StartPreview(preview_clbk_);
-
 	// Get image
 	preview_cv_image_ = preview_clbk_.GetImage();
 	const size_t color_height = (size_t) preview_cv_image_.size().height;
@@ -526,10 +522,7 @@ bool RealSenseIDROS::authenticate_service(const std::shared_ptr<realsense_id_ros
 		std::vector<DetectionObject> detections = auth_clbk.GetDetections();
 
 		// Exit if no faces are detected
-		if (detections.empty()){
-			preview_->StopPreview();
-			return false;
-		}
+		if (detections.empty()) return false;
 
 		// Create header
 		std_msgs::msg::Header header;
@@ -549,9 +542,6 @@ bool RealSenseIDROS::authenticate_service(const std::shared_ptr<realsense_id_ros
 		success = true;
 	}
 
-	// Stop preview
-	preview_->StopPreview();
-
 	return success;
 }
 
@@ -561,10 +551,6 @@ bool RealSenseIDROS::enroll_service(const std::shared_ptr<realsense_id_ros::srv:
 	RCLCPP_INFO(this->get_logger(), "Enroll service request");
 
 	bool success = false;
-
-	// Start preview
-	preview_ = std::make_unique<RealSenseID::Preview>(preview_config_);
-	preview_->StartPreview(preview_clbk_);
 
 	// Get image
 	preview_cv_image_ = preview_clbk_.GetImage();
@@ -597,9 +583,6 @@ bool RealSenseIDROS::enroll_service(const std::shared_ptr<realsense_id_ros::srv:
 		res->faces = faces;
 		success = true;
 	}
-
-	// Stop preview
-	preview_->StopPreview();
 
 	return success;
 }
@@ -695,10 +678,6 @@ bool RealSenseIDROS::authenticate_faceprints_service(const std::shared_ptr<reals
 
 	bool success = false;
 
-	// Start preview
-	preview_ = std::make_unique<RealSenseID::Preview>(preview_config_);
-	preview_->StartPreview(preview_clbk_);
-
 	// Get image
 	preview_cv_image_ = preview_clbk_.GetImage();
 	const size_t color_height = (size_t) preview_cv_image_.size().height;
@@ -713,10 +692,7 @@ bool RealSenseIDROS::authenticate_faceprints_service(const std::shared_ptr<reals
 		std::vector<DetectionObject> detections = auth_clbk.GetDetections();
 
 		// Exit if no faces are detected
-		if (detections.empty()){
-			preview_->StopPreview();
-			return false;
-		}
+		if (detections.empty()) return false;
 
 		// Create header
 		std_msgs::msg::Header header;
@@ -737,7 +713,7 @@ bool RealSenseIDROS::authenticate_faceprints_service(const std::shared_ptr<reals
 	}
 
 	// Stop preview
-	preview_->StopPreview();
+	//preview_->StopPreview();
 
 	return success;
 }
@@ -748,10 +724,6 @@ bool RealSenseIDROS::enroll_faceprints_service(const std::shared_ptr<realsense_i
 	RCLCPP_INFO(this->get_logger(), "Enroll faceprints service request");
 
 	bool success = false;
-
-	// Start preview
-	preview_ = std::make_unique<RealSenseID::Preview>(preview_config_);
-	preview_->StartPreview(preview_clbk_);
 
 	// Get image
 	preview_cv_image_ = preview_clbk_.GetImage();
@@ -784,9 +756,6 @@ bool RealSenseIDROS::enroll_faceprints_service(const std::shared_ptr<realsense_i
 		res->faces = faces;
 		success = true;
 	}
-
-	// Stop preview
-	preview_->StopPreview();
 
 	// Save database to file
 	faceprints_db_.data = enroll_clbk.getDatabase();
