@@ -7,6 +7,7 @@ Changelog for package realsense_id_ros
 * Remove authenticate loop due to stability issues.
 * Move preview to constructor.
 * Added function create_authenticator.
+* Added mutex to the captured image.
 
 2.0.0 (03-02-2023)
 ------------------

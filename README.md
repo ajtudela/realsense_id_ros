@@ -5,13 +5,13 @@
 
 ## Overview
 
-This is a package for using [Intel RealSense ID] (F455 and F450) cameras with ROS. Intel RealSense ID is a facial authentication on-device solution.
+This package enables the use of [Intel RealSense ID] (F455 and F450) cameras with ROS. The Intel RealSense ID camera is a facial authentication on-device solution.
 
-It exposes the camera as a ROS node that can be configured to allow the user to perform authentication and enrollment in device mode (inside the camera) or in server mode (using a faceprints database) and publishing the preview image.
+The package exposes the camera as a ROS node, allowing users to configure it for authentication and enrollment in either device mode (inside the camera) or server mode (using a faceprint database). Additionally, it publishes the preview image.
 
-Both the authentication and enrollment are exposed as ROS services in device mode and in service mode. Other services exposed are: removement of users and query the list of ids.
+In both device and server modes, authentication and enrollment are available as ROS services. Other services that can be accessed include user removal and querying the list of IDs.
 
-Also, all camera parameters can change online the device onboard configuration.
+Furthermore, all camera parameters can be changed online using the device's onboard configuration.
 
 **Keywords:** ROS2, Intel RealSense ID, face recognition
 
@@ -173,7 +173,7 @@ Camera node to perform facial recognition.
 - [x] Option to use authentication loop with published topics.
 - [x] Dynamic reconfigure server.
 - [ ] Extract features from RGB image.
-- [ ] Add mutex to the captured image.
+- [x] Add mutex to the captured image.
 
 [Intel RealSense ID]: https://www.intelrealsense.com/facial-authentication/
 [Ubuntu]: https://ubuntu.com/
