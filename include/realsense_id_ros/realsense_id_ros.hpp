@@ -72,9 +72,9 @@ class RealSenseIDROS: public rclcpp::Node{
 
 		sensor_msgs::msg::CameraInfo camera_info_;
 		std::thread auth_loop_thread_;
-		bool setup_, restore_, running_;
+		bool setup_, restore_;
 		std::string port_, db_filepath_, frame_id_;
-		bool server_mode_, auth_loop_mode_;
+		bool server_mode_;
 		cv::Mat preview_cv_image_;
 		rclcpp::TimerBase::SharedPtr timer_;
 
@@ -87,11 +87,10 @@ class RealSenseIDROS: public rclcpp::Node{
 		RSAuthFaceprintsCallback auth_face_clbk_;
 		FaceprintsDatabase faceprints_db_;
 		std::unique_ptr<RealSenseID::Preview> preview_;
-		std::shared_ptr<RealSenseID::FaceAuthenticator> authenticator_;
 
 		void get_params();
-		void authenticate_loop();
 		void update();
+		std::unique_ptr<RealSenseID::FaceAuthenticator> create_authenticator(const RealSenseID::SerialConfig& serial_config);
 		void log_callback(RealSenseID::LogLevel level, const char* msg);
 		rcl_interfaces::msg::SetParametersResult parameters_callback(const std::vector<rclcpp::Parameter> &parameters);
 
@@ -99,10 +98,6 @@ class RealSenseIDROS: public rclcpp::Node{
 								std::shared_ptr<realsense_id_ros::srv::DeviceInfo::Response> res);
 		bool set_camera_info(const std::shared_ptr<sensor_msgs::srv::SetCameraInfo::Request> req, 
 								std::shared_ptr<sensor_msgs::srv::SetCameraInfo::Response> res);
-		bool start_authentication_loop(const std::shared_ptr<realsense_id_ros::srv::StartAuthenticationLoop::Request> req, 
-								std::shared_ptr<realsense_id_ros::srv::StartAuthenticationLoop::Response> res);
-		bool stop_authentication_loop(const std::shared_ptr<realsense_id_ros::srv::StopAuthenticationLoop::Request> req, 
-								std::shared_ptr<realsense_id_ros::srv::StopAuthenticationLoop::Response> res);
 
 		// Services - Device mode
 		bool authenticate_service(const std::shared_ptr<realsense_id_ros::srv::Authenticate::Request> req,

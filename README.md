@@ -11,10 +11,7 @@ It exposes the camera as a ROS node that can be configured to allow the user to 
 
 Both the authentication and enrollment are exposed as ROS services in device mode and in service mode. Other services exposed are: removement of users and query the list of ids.
 
-Includes a dynamic reconfigure server parameter to change online the device onboard configuration.
-
-Also, the camera can be set to run facial authentication in a loop enabling the parameter "authenticate_loop" both in device and server mode.
-
+Also, all camera parameters can change online the device onboard configuration.
 
 **Keywords:** ROS2, Intel RealSense ID, face recognition
 
@@ -66,7 +63,7 @@ To build from source, clone the latest version from this repository into your ca
 
 To start the camera node in ROS:
 
-	ros2 realsense_id_ros realsense_id_ros_node
+	ros2 run realsense_id_ros realsense_id_ros_node
 
 ## Nodes
 
@@ -120,18 +117,6 @@ Camera node to perform facial recognition.
 
 		ros2 interface call /realsense_id_ros_node/remove_all
 
-* **`start_authentication_loop`** ([realsense_id_ros/StartAuthenticationLoop])
-
-	Start authentication in a loop. For example, you can trigger the computation from the console with
-
-		ros2 interface call /realsense_id_ros_node/start_authentication_loop
-
-* **`stop_authentication_loop`** ([realsense_id_ros/StopAuthenticationLoop])
-
-	Stop the authentication loop. For example, you can trigger the computation from the console with
-
-		ros2 interface call /realsense_id_ros_node/cancel_authentication_loop
-
 * **`query_users_id`** ([realsense_id_ros/QueryUsersId])
 
 	Query the ids of the users. Returns the number of users and an array of ids. For example, you can trigger the computation from the console with
@@ -151,10 +136,6 @@ Camera node to perform facial recognition.
 * **`database`** (string, default: "")
 
 	Path to the database folder.
-
-* **`authenticate_loop`** (bool, default: "false")
-
-	Runs authentication in a loop.
 
 * **`camera_rotation`** (int, default: "0")
 
@@ -193,7 +174,6 @@ Camera node to perform facial recognition.
 - [x] Dynamic reconfigure server.
 - [ ] Extract features from RGB image.
 - [ ] Add mutex to the captured image.
-- [ ] Fix "No UVC devices found" on Ubuntu 20.04.
 
 [Intel RealSense ID]: https://www.intelrealsense.com/facial-authentication/
 [Ubuntu]: https://ubuntu.com/

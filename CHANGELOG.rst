@@ -2,7 +2,13 @@
 Changelog for package realsense_id_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-2.0.0 (03-02-2022)
+2.1.0 (07-03-2023)
+------------------
+* Remove authenticate loop due to stability issues.
+* Move preview to constructor.
+* Added function create_authenticator.
+
+2.0.0 (03-02-2023)
 ------------------
 * First ROS2 (Galactic) version.
 

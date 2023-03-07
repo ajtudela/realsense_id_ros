@@ -40,7 +40,7 @@ class RSAuthFaceprintsCallback: public RealSenseID::AuthFaceprintsExtractionCall
 	public:
 		RSAuthFaceprintsCallback(){};
 
-		RSAuthFaceprintsCallback(std::shared_ptr<RealSenseID::FaceAuthenticator> authenticator, 
+		RSAuthFaceprintsCallback(RealSenseID::FaceAuthenticator* authenticator, 
 								RSFaceprintsDatabase faceprints_db) : 
 								authenticator_(authenticator), faceprints_db_(faceprints_db){}
 
@@ -161,16 +161,12 @@ class RSAuthFaceprintsCallback: public RealSenseID::AuthFaceprintsExtractionCall
 			return detections_;
 		}
 
-		void setAuthenticator(std::shared_ptr<RealSenseID::FaceAuthenticator> authenticator){
-			authenticator_ = authenticator;
-		}
-
 		void setFaceprintsDatabase(RSFaceprintsDatabase faceprintsDB){
 			faceprints_db_ = faceprintsDB;
 		}
 
 	private:
-		std::shared_ptr<RealSenseID::FaceAuthenticator> authenticator_;
+		RealSenseID::FaceAuthenticator* authenticator_;
 		RSFaceprintsDatabase faceprints_db_;
 		std::vector<DetectionObject> detections_;
 		std::vector<RealSenseID::FaceRect> faces_;

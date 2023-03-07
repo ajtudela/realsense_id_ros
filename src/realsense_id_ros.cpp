@@ -24,7 +24,7 @@
 #include "realsense_id_ros/realsense_server_callbacks.hpp"
 
 /* Initialize the subscribers and the publishers */
-RealSenseIDROS::RealSenseIDROS() : Node("realsense_id_ros"), running_(false){
+RealSenseIDROS::RealSenseIDROS() : Node("realsense_id_ros"){
 	// Initialize ROS parameters
 	get_params();
 
@@ -32,26 +32,6 @@ RealSenseIDROS::RealSenseIDROS() : Node("realsense_id_ros"), running_(false){
 	RealSenseID::SetLogCallback(
 		std::bind(&RealSenseIDROS::log_callback, this, std::placeholders::_1, std::placeholders::_2), 
 		RealSenseID::LogLevel::Off, true);
-
-	// Set serial config and connect
-	serial_config_.port = port_.c_str();
-	authenticator_ = std::make_unique<RealSenseID::FaceAuthenticator>();
-	auto connect_status = authenticator_->Connect(serial_config_);
-	if (connect_status != RealSenseID::Status::Ok){
-		RCLCPP_ERROR_STREAM(this->get_logger(), 
-			"Failed connecting to port " << serial_config_.port << " status:" << connect_status);
-		exit(1);
-	}else{
-		RCLCPP_INFO_STREAM(this->get_logger(), "Connected to device in port" << serial_config_.port);
-		RCLCPP_DEBUG_STREAM(this->get_logger(), "Opening serial port " << port_.c_str());
-	}
-
-	// Set device config
-	auto status = authenticator_->SetDeviceConfig(device_config_);
-	if (status != RealSenseID::Status::Ok){
-		RCLCPP_ERROR(this->get_logger(), "Failed to apply device settings!");
-		authenticator_->Disconnect();
-	}
 
 	// Callback for monitor changes in parameters
 	callback_handle_ = this->add_on_set_parameters_callback(
@@ -62,10 +42,6 @@ RealSenseIDROS::RealSenseIDROS() : Node("realsense_id_ros"), running_(false){
 									std::bind(&RealSenseIDROS::get_device_info, this, std::placeholders::_1, std::placeholders::_2));
 	set_camera_info_service_ = this->create_service<sensor_msgs::srv::SetCameraInfo>("set_camera_info", 
 									std::bind(&RealSenseIDROS::set_camera_info, this, std::placeholders::_1, std::placeholders::_2));
-	start_auth_loop_service_ = this->create_service<realsense_id_ros::srv::StartAuthenticationLoop>("start_authentication_loop", 
-									std::bind(&RealSenseIDROS::start_authentication_loop, this, std::placeholders::_1, std::placeholders::_2));
-	stop_auth_loop_service_ = this->create_service<realsense_id_ros::srv::StopAuthenticationLoop>("stop_authentication_loop", 
-									std::bind(&RealSenseIDROS::stop_authentication_loop, this, std::placeholders::_1, std::placeholders::_2));
 
 	if (!server_mode_){
 		RCLCPP_INFO(this->get_logger(), "Using API in device mode");
@@ -99,7 +75,7 @@ RealSenseIDROS::RealSenseIDROS() : Node("realsense_id_ros"), running_(false){
 	camera_info_pub_        = this->create_publisher<sensor_msgs::msg::CameraInfo>("camera_info", 1);
 
 	// And timer
-	timer_ = this->create_wall_timer(std::chrono::milliseconds(30), std::bind(&RealSenseIDROS::update, this));
+	timer_ = this->create_wall_timer(std::chrono::milliseconds(60), std::bind(&RealSenseIDROS::update, this));
 
 	// Load the database from a file
 	if (server_mode_){
@@ -109,26 +85,13 @@ RealSenseIDROS::RealSenseIDROS() : Node("realsense_id_ros"), running_(false){
 		}
 	}
 
-	// Change authenticate loop
-	if (!running_ && auth_loop_mode_){
-		std::shared_ptr<realsense_id_ros::srv::StartAuthenticationLoop::Request> request;
-		std::shared_ptr<realsense_id_ros::srv::StartAuthenticationLoop::Response> response;
-		start_authentication_loop(request, response);
-	}
-
-	preview_.reset();
+	// Start preview
+	preview_ = std::make_unique<RealSenseID::Preview>(preview_config_);
+	preview_->StartPreview(preview_clbk_);
 }
 
 /* Delete all parameteres-> */
 RealSenseIDROS::~RealSenseIDROS(){
-	// Cancel
-	authenticator_->Cancel();
-
-	// Disconnect from the device
-	authenticator_->Disconnect();
-
-	// Stop preview
-	preview_->StopPreview();
 }
 
 /* Update parameters of the node. */
@@ -136,12 +99,6 @@ void RealSenseIDROS::get_params(){
 	RCLCPP_INFO(this->get_logger(), "Reading ROS parameters");
 
 	// BOOLEAN PARAMS ..........................................................................
-	nav2_util::declare_parameter_if_not_declared(this, "authenticate_loop", rclcpp::ParameterValue(false), 
-							rcl_interfaces::msg::ParameterDescriptor()
-							.set__description("Start authentication loop"));
-	this->get_parameter("authenticate_loop", auth_loop_mode_);
-	RCLCPP_INFO(this->get_logger(), "The parameter authenticate_loop is set to: [%s]", auth_loop_mode_ ? "true" : "false");
-
 	nav2_util::declare_parameter_if_not_declared(this, "server_mode", rclcpp::ParameterValue(false), 
 							rcl_interfaces::msg::ParameterDescriptor()
 							.set__description("Use API in server mode"));
@@ -266,6 +223,16 @@ void RealSenseIDROS::get_params(){
 		device_config_.matcher_confidence_level = RealSenseID::DeviceConfig::MatcherConfidenceLevel::Low;
 	}
 	RCLCPP_INFO(this->get_logger(), "The parameter matcher_confidence_level is set to: [%s]", matcher_confidence_level.c_str());
+
+	// Set serial config and connect
+	serial_config_.port = port_.c_str();
+
+	// Apply device settings
+	auto authenticator = create_authenticator(serial_config_);
+	auto status = authenticator->SetDeviceConfig(device_config_);
+	if (status != RealSenseID::Status::Ok){
+		RCLCPP_ERROR(this->get_logger(), "Failed to apply device settings!");
+	}
 }
 
 /* Reconfigure callback. */
@@ -277,10 +244,6 @@ rcl_interfaces::msg::SetParametersResult RealSenseIDROS::parameters_callback(con
 
 	for (const auto &param: parameters){
 		// BOOLEAN PARAMS ..........................................................................
-		if (param.get_name() == "authenticate_loop" && param.get_type() == rclcpp::ParameterType::PARAMETER_BOOL){
-				auth_loop_mode_ = param.as_bool();
-				RCLCPP_INFO(this->get_logger(), "The parameter authenticate_loop is set to: [%s]", auth_loop_mode_ ? "true" : "false");
-		}
 		if (param.get_name() == "server_mode" && param.get_type() == rclcpp::ParameterType::PARAMETER_BOOL){
 				server_mode_ = param.as_bool();
 				RCLCPP_INFO(this->get_logger(), "The parameter server_mode is set to: [%s]", server_mode_ ? "true" : "false");
@@ -362,10 +325,11 @@ rcl_interfaces::msg::SetParametersResult RealSenseIDROS::parameters_callback(con
 		}
 	}
 
-	auto status = authenticator_->SetDeviceConfig(device_config_);
+	// Apply device settings
+	auto authenticator = create_authenticator(serial_config_);
+	auto status = authenticator->SetDeviceConfig(device_config_);
 	if (status != RealSenseID::Status::Ok){
 		RCLCPP_ERROR(this->get_logger(), "Failed to apply device settings!");
-		authenticator_->Disconnect();
 	}
 
 	return result;
@@ -391,21 +355,8 @@ void RealSenseIDROS::log_callback(RealSenseID::LogLevel level, const char* msg){
 	}
 }
 
-/* Authenticate loop */
-void RealSenseIDROS::authenticate_loop(){
-	if (!server_mode_){
-		authenticator_->AuthenticateLoop(auth_clbk_);
-	}else{
-		auth_face_clbk_.setAuthenticator(authenticator_);
-		auth_face_clbk_.setFaceprintsDatabase(faceprints_db_.data);
-		authenticator_->ExtractFaceprintsForAuthLoop(auth_face_clbk_);
-	}
-}
-
 /* Publish Faces */
 void RealSenseIDROS::update(){
-	if (!auth_loop_mode_) return;
-
 	// Create header of FaceArray
 	realsense_id_ros::msg::FaceArray face_array;
 	face_array.header.frame_id = frame_id_;
@@ -473,45 +424,18 @@ void RealSenseIDROS::update(){
 	camera_info_pub_->publish(camera_info_);
 }
 
-/* Start authentication loop */
-bool RealSenseIDROS::start_authentication_loop(const std::shared_ptr<realsense_id_ros::srv::StartAuthenticationLoop::Request> req, 
-								std::shared_ptr<realsense_id_ros::srv::StartAuthenticationLoop::Response> res){
-	RCLCPP_INFO(this->get_logger(), "Start authentication loop service request");
-
-	if (!running_){
-		preview_ = std::make_unique<RealSenseID::Preview>(preview_config_);
-		preview_->StartPreview(preview_clbk_);
-		auth_loop_thread_ = std::thread(std::bind(&RealSenseIDROS::authenticate_loop, this));
-		running_ = true;
-		auth_loop_mode_ = true;
-		this->set_parameter(rclcpp::Parameter("authenticate_loop", auth_loop_mode_));
-		RCLCPP_INFO_ONCE(this->get_logger(), "Authentication loop started");
-		return true;
+std::unique_ptr<RealSenseID::FaceAuthenticator> RealSenseIDROS::create_authenticator(const RealSenseID::SerialConfig& serial_config){
+	auto authenticator = std::make_unique<RealSenseID::FaceAuthenticator>();
+	auto connect_status = authenticator->Connect(serial_config);
+	if (connect_status != RealSenseID::Status::Ok){
+		RCLCPP_ERROR_STREAM(this->get_logger(), 
+			"Failed connecting to port " << serial_config.port << " status:" << connect_status);
+		std::exit(1);
 	}else{
-		RCLCPP_ERROR(this->get_logger(), "Cannot start the authentication loop");
-		return false;
+		RCLCPP_INFO_STREAM(this->get_logger(), "Connected to device in port" << serial_config_.port);
+		RCLCPP_DEBUG_STREAM(this->get_logger(), "Opening serial port " << port_.c_str());
 	}
-}
-
-/* Cancel authentication loop */
-bool RealSenseIDROS::stop_authentication_loop(const std::shared_ptr<realsense_id_ros::srv::StopAuthenticationLoop::Request> req, 
-								std::shared_ptr<realsense_id_ros::srv::StopAuthenticationLoop::Response> res){
-	RCLCPP_INFO(this->get_logger(), "Cancel authentication loop service request");
-
-	if (running_){
-		authenticator_->Cancel();
-		preview_->StopPreview();
-		auth_loop_thread_.join();
-		running_ = false;
-		auth_loop_mode_ = false;
-		this->set_parameter(rclcpp::Parameter("authenticate_loop", auth_loop_mode_));
-		RCLCPP_INFO_ONCE(this->get_logger(), "Authentication loop stopped");
-		return true;
-	}else{
-		this->set_parameter(rclcpp::Parameter("authenticate_loop", auth_loop_mode_));
-		RCLCPP_ERROR(this->get_logger(), "Cannot stop the authentication loop");
-		return false;
-	}
+	return authenticator;
 }
 
 /* Get device info. */
@@ -580,18 +504,15 @@ bool RealSenseIDROS::authenticate_service(const std::shared_ptr<realsense_id_ros
 
 	bool success = false;
 
-	// Start preview
-	preview_ = std::make_unique<RealSenseID::Preview>(preview_config_);
-	preview_->StartPreview(preview_clbk_);
-
 	// Get image
 	preview_cv_image_ = preview_clbk_.GetImage();
 	const size_t color_height = (size_t) preview_cv_image_.size().height;
 	const size_t color_width  = (size_t) preview_cv_image_.size().width;
 
 	// Authenticate a user
+	auto authenticator = create_authenticator(serial_config_);
 	RSAuthenticationCallback auth_clbk;
-	auto status = authenticator_->Authenticate(auth_clbk);
+	auto status = authenticator->Authenticate(auth_clbk);
 
 	// Get timestamps saved in callbacks
 	auto face_detection_ts = auth_clbk.GetLastTimeStamp();
@@ -601,10 +522,7 @@ bool RealSenseIDROS::authenticate_service(const std::shared_ptr<realsense_id_ros
 		std::vector<DetectionObject> detections = auth_clbk.GetDetections();
 
 		// Exit if no faces are detected
-		if (detections.empty()){
-			preview_->StopPreview();
-			return false;
-		}
+		if (detections.empty()) return false;
 
 		// Create header
 		std_msgs::msg::Header header;
@@ -624,9 +542,6 @@ bool RealSenseIDROS::authenticate_service(const std::shared_ptr<realsense_id_ros
 		success = true;
 	}
 
-	// Stop preview
-	preview_->StopPreview();
-
 	return success;
 }
 
@@ -637,18 +552,15 @@ bool RealSenseIDROS::enroll_service(const std::shared_ptr<realsense_id_ros::srv:
 
 	bool success = false;
 
-	// Start preview
-	preview_ = std::make_unique<RealSenseID::Preview>(preview_config_);
-	preview_->StartPreview(preview_clbk_);
-
 	// Get image
 	preview_cv_image_ = preview_clbk_.GetImage();
 	const size_t color_height = (size_t) preview_cv_image_.size().height;
 	const size_t color_width  = (size_t) preview_cv_image_.size().width;
 
 	// Enroll a user
+	auto authenticator = create_authenticator(serial_config_);
 	RSEnrollmentCallback enroll_clbk;
-	auto status = authenticator_->Enroll(enroll_clbk, req->id.c_str());
+	auto status = authenticator->Enroll(enroll_clbk, req->id.c_str());
 
 	// Create header
 	std_msgs::msg::Header header;
@@ -673,9 +585,6 @@ bool RealSenseIDROS::enroll_service(const std::shared_ptr<realsense_id_ros::srv:
 		success = true;
 	}
 
-	// Stop preview
-	preview_->StopPreview();
-
 	return success;
 }
 
@@ -685,7 +594,8 @@ bool RealSenseIDROS::remove_user_service(const std::shared_ptr<realsense_id_ros:
 	RCLCPP_INFO(this->get_logger(), "Remove user service request");
 
 	// Remove a user
-	auto status = authenticator_->RemoveUser(req->name.c_str());
+	auto authenticator = create_authenticator(serial_config_);
+	auto status = authenticator->RemoveUser(req->name.c_str());
 	if (status == RealSenseID::Status::Ok){
 		RCLCPP_INFO(this->get_logger(), "User removed successfully");
 		return true;
@@ -701,7 +611,8 @@ bool RealSenseIDROS::remove_all_service(const std::shared_ptr<realsense_id_ros::
 	RCLCPP_INFO(this->get_logger(), "Remove all users service request");
 
 	// Remove all users
-	auto status = authenticator_->RemoveAll();
+	auto authenticator = create_authenticator(serial_config_);
+	auto status = authenticator->RemoveAll();
 	if (status == RealSenseID::Status::Ok){
 		RCLCPP_INFO(this->get_logger(), "Users removed successfully");
 		return true;
@@ -718,7 +629,8 @@ bool RealSenseIDROS::query_users_id_service(const std::shared_ptr<realsense_id_r
 
 	// Get number of users
 	unsigned int number_of_users = 0;
-	auto status = authenticator_->QueryNumberOfUsers(number_of_users);
+	auto authenticator = create_authenticator(serial_config_);
+	auto status = authenticator->QueryNumberOfUsers(number_of_users);
 	if (status != RealSenseID::Status::Ok){
 		RCLCPP_INFO_STREAM(this->get_logger(), "Status: " << status);
 		return false;
@@ -735,7 +647,7 @@ bool RealSenseIDROS::query_users_id_service(const std::shared_ptr<realsense_id_r
 		user_ids[i] = new char[RealSenseID::MAX_USERID_LENGTH];
 	}
 	unsigned int number_of_users_in_out = number_of_users;
-	status = authenticator_->QueryUserIds(user_ids, number_of_users_in_out);
+	status = authenticator->QueryUserIds(user_ids, number_of_users_in_out);
 	if (status != RealSenseID::Status::Ok){
 		RCLCPP_INFO_STREAM(this->get_logger(), "Status: " << status);
 		// Free allocated memory and return on error
@@ -770,28 +682,22 @@ bool RealSenseIDROS::authenticate_faceprints_service(const std::shared_ptr<reals
 
 	bool success = false;
 
-	// Start preview
-	preview_ = std::make_unique<RealSenseID::Preview>(preview_config_);
-	preview_->StartPreview(preview_clbk_);
-
 	// Get image
 	preview_cv_image_ = preview_clbk_.GetImage();
 	const size_t color_height = (size_t) preview_cv_image_.size().height;
 	const size_t color_width  = (size_t) preview_cv_image_.size().width;
 
 	// Create callback
-	RSAuthFaceprintsCallback auth_clbk(authenticator_, faceprints_db_.data);
+	auto authenticator = create_authenticator(serial_config_);
+	RSAuthFaceprintsCallback auth_clbk(authenticator.get(), faceprints_db_.data);
 
 	// Extract faceprints of the user in front of the device
-	auto status = authenticator_->ExtractFaceprintsForAuth(auth_clbk);
+	auto status = authenticator->ExtractFaceprintsForAuth(auth_clbk);
 	if (status == RealSenseID::Status::Ok){
 		std::vector<DetectionObject> detections = auth_clbk.GetDetections();
 
 		// Exit if no faces are detected
-		if (detections.empty()){
-			preview_->StopPreview();
-			return false;
-		}
+		if (detections.empty()) return false;
 
 		// Create header
 		std_msgs::msg::Header header;
@@ -811,9 +717,6 @@ bool RealSenseIDROS::authenticate_faceprints_service(const std::shared_ptr<reals
 		success = true;
 	}
 
-	// Stop preview
-	preview_->StopPreview();
-
 	return success;
 }
 
@@ -824,10 +727,6 @@ bool RealSenseIDROS::enroll_faceprints_service(const std::shared_ptr<realsense_i
 
 	bool success = false;
 
-	// Start preview
-	preview_ = std::make_unique<RealSenseID::Preview>(preview_config_);
-	preview_->StartPreview(preview_clbk_);
-
 	// Get image
 	preview_cv_image_ = preview_clbk_.GetImage();
 	const size_t color_height = (size_t) preview_cv_image_.size().height;
@@ -837,7 +736,8 @@ bool RealSenseIDROS::enroll_faceprints_service(const std::shared_ptr<realsense_i
 	RSEnrollFaceprintsCallback enroll_clbk(req->id.c_str(), faceprints_db_.data);
 
 	// Enroll a user
-	auto status = authenticator_->ExtractFaceprintsForEnroll(enroll_clbk);
+	auto authenticator = create_authenticator(serial_config_);
+	auto status = authenticator->ExtractFaceprintsForEnroll(enroll_clbk);
 	if (status == RealSenseID::Status::Ok){
 		std::vector<DetectionObject> detections = enroll_clbk.GetDetections();
 
@@ -859,9 +759,6 @@ bool RealSenseIDROS::enroll_faceprints_service(const std::shared_ptr<realsense_i
 		res->faces = faces;
 		success = true;
 	}
-
-	// Stop preview
-	preview_->StopPreview();
 
 	// Save database to file
 	faceprints_db_.data = enroll_clbk.getDatabase();
