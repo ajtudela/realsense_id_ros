@@ -1,7 +1,7 @@
 # realsense_id_ros
 
 ![ROS2](https://img.shields.io/badge/ros2-galactic-purple?logo=ros&logoColor=white)
-![License](https://img.shields.io/badge/license-Apache%202-blue?style=for-the-badge)
+![License](https://img.shields.io/badge/license-Apache%202-blue)
 
 ## Overview
 
