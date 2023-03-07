@@ -30,11 +30,6 @@ struct DetectionObject{
 	std::string id;
 	bool has_mask;
 
-	void sanitize_size(const size_t& imageWidth, const size_t& imageHeight){
-		width = ((x + width) > imageWidth) ? (imageWidth - x) : width;
-		height = ((y + height) > imageHeight) ? (imageHeight - y) : height;
-	}
-
 	/* Create a Face msg */
 	realsense_id_ros::msg::Face to_msg(const std_msgs::msg::Header & header, const cv::Mat & image){
 		realsense_id_ros::msg::Face face;
@@ -44,6 +39,10 @@ struct DetectionObject{
 		face.id = id;
 		face.confidence = confidence;
 		face.has_mask = has_mask;
+
+		// Resize the bounding box if it is out of the image
+		width = ((x + width) > image.size().width) ? (image.size().width - x) : width;
+		height = ((y + height) > image.size().height) ? (image.size().height - y) : height;
 
 		// 2D bounding box surrounding the object
 		face.bbox.center.x = x + width / 2;

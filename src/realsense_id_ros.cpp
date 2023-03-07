@@ -364,8 +364,6 @@ void RealSenseIDROS::update(){
 
 	// Get image
 	preview_cv_image_ = preview_clbk_.GetImage();
-	const size_t color_height = (size_t) preview_cv_image_.size().height;
-	const size_t color_width  = (size_t) preview_cv_image_.size().width;
 
 	// Create face array message
 	std::vector<DetectionObject> detections;
@@ -376,8 +374,7 @@ void RealSenseIDROS::update(){
 	}
 
 	for (auto &detection: detections){
-		// Sanitize and convert to face msg
-		detection.sanitize_size(color_width, color_height);
+		// Convert to face msg
 		auto face = detection.to_msg(face_array.header, preview_cv_image_);
 		face_array.faces.push_back(face);
 
@@ -414,8 +411,8 @@ void RealSenseIDROS::update(){
 
 	//Publish camera info
 	camera_info_.header = face_array.header;
-	camera_info_.height = color_height;
-	camera_info_.width = color_width;
+	camera_info_.height = preview_cv_image_.size().height;
+	camera_info_.width = preview_cv_image_.size().width;
 	camera_info_.distortion_model = "plumb_bob";
 	camera_info_.d = {0.0, 0.0, 0.0, 0.0, 0.0};
 	camera_info_.k = {911.9729056029453, 0.0, 543.4705406497254, 0.0, 935.5803580030122, 902.0450795440844, 0.0, 0.0, 1.0};
@@ -506,8 +503,6 @@ bool RealSenseIDROS::authenticate_service(const std::shared_ptr<realsense_id_ros
 
 	// Get image
 	preview_cv_image_ = preview_clbk_.GetImage();
-	const size_t color_height = (size_t) preview_cv_image_.size().height;
-	const size_t color_width  = (size_t) preview_cv_image_.size().width;
 
 	// Authenticate a user
 	auto authenticator = create_authenticator(serial_config_);
@@ -532,8 +527,7 @@ bool RealSenseIDROS::authenticate_service(const std::shared_ptr<realsense_id_ros
 		// Create face array message
 		std::vector<realsense_id_ros::msg::Face> faces;
 		for (auto &detection: detections){
-			// Sanitize and convert to face msg
-			detection.sanitize_size(color_width, color_height);
+			// Convert to face msg
 			auto face = detection.to_msg(header, preview_cv_image_);
 			faces.push_back(face);
 		}
@@ -554,8 +548,6 @@ bool RealSenseIDROS::enroll_service(const std::shared_ptr<realsense_id_ros::srv:
 
 	// Get image
 	preview_cv_image_ = preview_clbk_.GetImage();
-	const size_t color_height = (size_t) preview_cv_image_.size().height;
-	const size_t color_width  = (size_t) preview_cv_image_.size().width;
 
 	// Enroll a user
 	auto authenticator = create_authenticator(serial_config_);
@@ -574,8 +566,7 @@ bool RealSenseIDROS::enroll_service(const std::shared_ptr<realsense_id_ros::srv:
 		// Create face array message
 		std::vector<realsense_id_ros::msg::Face> faces;
 		for (auto &detection: detections){
-			// Sanitize and convert to face msg
-			detection.sanitize_size(color_width, color_height);
+			// Convert to face msg
 			auto face = detection.to_msg(header, preview_cv_image_);
 			face.id = req->id.c_str();
 			faces.push_back(face);
@@ -684,8 +675,6 @@ bool RealSenseIDROS::authenticate_faceprints_service(const std::shared_ptr<reals
 
 	// Get image
 	preview_cv_image_ = preview_clbk_.GetImage();
-	const size_t color_height = (size_t) preview_cv_image_.size().height;
-	const size_t color_width  = (size_t) preview_cv_image_.size().width;
 
 	// Create callback
 	auto authenticator = create_authenticator(serial_config_);
@@ -707,8 +696,7 @@ bool RealSenseIDROS::authenticate_faceprints_service(const std::shared_ptr<reals
 		// Create face array message
 		std::vector<realsense_id_ros::msg::Face> faces;
 		for (auto &detection: detections){
-			// Sanitize and convert to face msg
-			detection.sanitize_size(color_width, color_height);
+			// Convert to face msg
 			auto face = detection.to_msg(header, preview_cv_image_);
 			faces.push_back(face);
 		}
@@ -729,8 +717,6 @@ bool RealSenseIDROS::enroll_faceprints_service(const std::shared_ptr<realsense_i
 
 	// Get image
 	preview_cv_image_ = preview_clbk_.GetImage();
-	const size_t color_height = (size_t) preview_cv_image_.size().height;
-	const size_t color_width  = (size_t) preview_cv_image_.size().width;
 
 	// Create callback
 	RSEnrollFaceprintsCallback enroll_clbk(req->id.c_str(), faceprints_db_.data);
@@ -749,8 +735,7 @@ bool RealSenseIDROS::enroll_faceprints_service(const std::shared_ptr<realsense_i
 		// Create face array message
 		std::vector<realsense_id_ros::msg::Face> faces;
 		for (auto &detection: detections){
-			// Sanitize and convert to face msg
-			detection.sanitize_size(color_width, color_height);
+			// Convert to face msg
 			auto face = detection.to_msg(header, preview_cv_image_);
 			face.id = req->id.c_str();
 			faces.push_back(face);
