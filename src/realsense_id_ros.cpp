@@ -717,9 +717,6 @@ bool RealSenseIDROS::authenticate_faceprints_service(const std::shared_ptr<reals
 		success = true;
 	}
 
-	// Stop preview
-	//preview_->StopPreview();
-
 	return success;
 }
 
