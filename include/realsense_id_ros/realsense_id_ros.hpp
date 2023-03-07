@@ -13,6 +13,7 @@
 #define REALSENSE_ID_ROS__REALSENSE_ID_HPP_
 
 // C++
+#include <mutex>
 #include <string>
 #include <thread>
 
@@ -70,23 +71,22 @@ class RealSenseIDROS: public rclcpp::Node{
 
 		OnSetParametersCallbackHandle::SharedPtr callback_handle_;
 
-		sensor_msgs::msg::CameraInfo camera_info_;
-		std::thread auth_loop_thread_;
-		bool setup_, restore_;
+		std::mutex mutex_;
+		bool setup_, restore_, server_mode_;
 		std::string port_, db_filepath_, frame_id_;
-		bool server_mode_;
 		cv::Mat preview_cv_image_;
 		rclcpp::TimerBase::SharedPtr timer_;
+		sensor_msgs::msg::CameraInfo camera_info_;
 
 		// RealSense ID
 		RealSenseID::SerialConfig serial_config_;
 		RealSenseID::DeviceConfig device_config_;
 		RealSenseID::PreviewConfig preview_config_;
-		RSPreviewCallback preview_clbk_;
 		RSAuthenticationCallback auth_clbk_;
 		RSAuthFaceprintsCallback auth_face_clbk_;
 		FaceprintsDatabase faceprints_db_;
 		std::unique_ptr<RealSenseID::Preview> preview_;
+		std::unique_ptr<RSPreviewCallback> preview_clbk_;
 
 		void get_params();
 		void update();

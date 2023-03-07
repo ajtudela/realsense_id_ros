@@ -87,7 +87,8 @@ RealSenseIDROS::RealSenseIDROS() : Node("realsense_id_ros"){
 
 	// Start preview
 	preview_ = std::make_unique<RealSenseID::Preview>(preview_config_);
-	preview_->StartPreview(preview_clbk_);
+	preview_clbk_ = std::make_unique<RSPreviewCallback>(&mutex_);
+	preview_->StartPreview(*preview_clbk_);
 }
 
 /* Delete all parameteres-> */
@@ -363,7 +364,8 @@ void RealSenseIDROS::update(){
 	face_array.header.stamp = this->now();
 
 	// Get image
-	preview_cv_image_ = preview_clbk_.GetImage();
+	std::lock_guard<std::mutex> lock(mutex_);
+	preview_cv_image_ = preview_clbk_->GetImage();
 
 	// Create face array message
 	std::vector<DetectionObject> detections;
@@ -502,7 +504,8 @@ bool RealSenseIDROS::authenticate_service(const std::shared_ptr<realsense_id_ros
 	bool success = false;
 
 	// Get image
-	preview_cv_image_ = preview_clbk_.GetImage();
+	std::lock_guard<std::mutex> lock(mutex_);
+	preview_cv_image_ = preview_clbk_->GetImage();
 
 	// Authenticate a user
 	auto authenticator = create_authenticator(serial_config_);
@@ -547,7 +550,8 @@ bool RealSenseIDROS::enroll_service(const std::shared_ptr<realsense_id_ros::srv:
 	bool success = false;
 
 	// Get image
-	preview_cv_image_ = preview_clbk_.GetImage();
+	std::lock_guard<std::mutex> lock(mutex_);
+	preview_cv_image_ = preview_clbk_->GetImage();
 
 	// Enroll a user
 	auto authenticator = create_authenticator(serial_config_);
@@ -674,7 +678,8 @@ bool RealSenseIDROS::authenticate_faceprints_service(const std::shared_ptr<reals
 	bool success = false;
 
 	// Get image
-	preview_cv_image_ = preview_clbk_.GetImage();
+	std::lock_guard<std::mutex> lock(mutex_);
+	preview_cv_image_ = preview_clbk_->GetImage();
 
 	// Create callback
 	auto authenticator = create_authenticator(serial_config_);
@@ -716,7 +721,8 @@ bool RealSenseIDROS::enroll_faceprints_service(const std::shared_ptr<realsense_i
 	bool success = false;
 
 	// Get image
-	preview_cv_image_ = preview_clbk_.GetImage();
+	std::lock_guard<std::mutex> lock(mutex_);
+	preview_cv_image_ = preview_clbk_->GetImage();
 
 	// Create callback
 	RSEnrollFaceprintsCallback enroll_clbk(req->id.c_str(), faceprints_db_.data);

@@ -13,6 +13,7 @@
 #define REALSENSE_ID_ROS__REALSENSE_CALLBACKS_HPP_
 
 // C++
+#include <mutex>
 #include <string>
 
 // OpenCV
@@ -172,7 +173,10 @@ class RSEnrollmentCallback: public RealSenseID::EnrollmentCallback{
 
 class RSPreviewCallback: public RealSenseID::PreviewImageReadyCallback{
 	public:
+		RSPreviewCallback(std::mutex *mutex): mutex(mutex){}
 		void OnPreviewImageReady(const RealSenseID::Image image){
+			// Lock mutex
+			std::lock_guard<std::mutex> lock(*mutex);
 			// Convert to CV Mat
 			image_ = cv::Mat(image.height, image.width, CV_8UC3, image.buffer);
 			RCLCPP_DEBUG_STREAM(rclcpp::get_logger("RealSenseID"), "Preview " << 
@@ -184,6 +188,7 @@ class RSPreviewCallback: public RealSenseID::PreviewImageReadyCallback{
 		}
 
 	private:
+		std::mutex *mutex;
 		cv::Mat image_;
 };
 
