@@ -33,26 +33,6 @@ RealSenseIDROS::RealSenseIDROS() : Node("realsense_id_ros"){
 		std::bind(&RealSenseIDROS::log_callback, this, std::placeholders::_1, std::placeholders::_2), 
 		RealSenseID::LogLevel::Off, true);
 
-	// Set serial config and connect
-	serial_config_.port = port_.c_str();
-	authenticator_ = std::make_unique<RealSenseID::FaceAuthenticator>();
-	auto connect_status = authenticator_->Connect(serial_config_);
-	if (connect_status != RealSenseID::Status::Ok){
-		RCLCPP_ERROR_STREAM(this->get_logger(), 
-			"Failed connecting to port " << serial_config_.port << " status:" << connect_status);
-		exit(1);
-	}else{
-		RCLCPP_INFO_STREAM(this->get_logger(), "Connected to device in port" << serial_config_.port);
-		RCLCPP_DEBUG_STREAM(this->get_logger(), "Opening serial port " << port_.c_str());
-	}
-
-	// Set device config
-	auto status = authenticator_->SetDeviceConfig(device_config_);
-	if (status != RealSenseID::Status::Ok){
-		RCLCPP_ERROR(this->get_logger(), "Failed to apply device settings!");
-		authenticator_->Disconnect();
-	}
-
 	// Callback for monitor changes in parameters
 	callback_handle_ = this->add_on_set_parameters_callback(
 						std::bind(&RealSenseIDROS::parameters_callback, this, std::placeholders::_1));
@@ -112,12 +92,6 @@ RealSenseIDROS::RealSenseIDROS() : Node("realsense_id_ros"){
 
 /* Delete all parameteres-> */
 RealSenseIDROS::~RealSenseIDROS(){
-	// Cancel
-	authenticator_->Cancel();
-
-	// Disconnect from the device
-	authenticator_->Disconnect();
-
 }
 
 /* Update parameters of the node. */
@@ -249,6 +223,16 @@ void RealSenseIDROS::get_params(){
 		device_config_.matcher_confidence_level = RealSenseID::DeviceConfig::MatcherConfidenceLevel::Low;
 	}
 	RCLCPP_INFO(this->get_logger(), "The parameter matcher_confidence_level is set to: [%s]", matcher_confidence_level.c_str());
+
+	// Set serial config and connect
+	serial_config_.port = port_.c_str();
+
+	// Apply device settings
+	auto authenticator = create_authenticator(serial_config_);
+	auto status = authenticator->SetDeviceConfig(device_config_);
+	if (status != RealSenseID::Status::Ok){
+		RCLCPP_ERROR(this->get_logger(), "Failed to apply device settings!");
+	}
 }
 
 /* Reconfigure callback. */
@@ -341,10 +325,11 @@ rcl_interfaces::msg::SetParametersResult RealSenseIDROS::parameters_callback(con
 		}
 	}
 
-	auto status = authenticator_->SetDeviceConfig(device_config_);
+	// Apply device settings
+	auto authenticator = create_authenticator(serial_config_);
+	auto status = authenticator->SetDeviceConfig(device_config_);
 	if (status != RealSenseID::Status::Ok){
 		RCLCPP_ERROR(this->get_logger(), "Failed to apply device settings!");
-		authenticator_->Disconnect();
 	}
 
 	return result;
@@ -439,6 +424,20 @@ void RealSenseIDROS::update(){
 	camera_info_pub_->publish(camera_info_);
 }
 
+std::unique_ptr<RealSenseID::FaceAuthenticator> RealSenseIDROS::create_authenticator(const RealSenseID::SerialConfig& serial_config){
+	auto authenticator = std::make_unique<RealSenseID::FaceAuthenticator>();
+	auto connect_status = authenticator->Connect(serial_config);
+	if (connect_status != RealSenseID::Status::Ok){
+		RCLCPP_ERROR_STREAM(this->get_logger(), 
+			"Failed connecting to port " << serial_config.port << " status:" << connect_status);
+		std::exit(1);
+	}else{
+		RCLCPP_INFO_STREAM(this->get_logger(), "Connected to device in port" << serial_config_.port);
+		RCLCPP_DEBUG_STREAM(this->get_logger(), "Opening serial port " << port_.c_str());
+	}
+	return authenticator;
+}
+
 /* Get device info. */
 bool RealSenseIDROS::get_device_info(const std::shared_ptr<realsense_id_ros::srv::DeviceInfo::Request> req, 
 								std::shared_ptr<realsense_id_ros::srv::DeviceInfo::Response> res){
@@ -511,8 +510,9 @@ bool RealSenseIDROS::authenticate_service(const std::shared_ptr<realsense_id_ros
 	const size_t color_width  = (size_t) preview_cv_image_.size().width;
 
 	// Authenticate a user
+	auto authenticator = create_authenticator(serial_config_);
 	RSAuthenticationCallback auth_clbk;
-	auto status = authenticator_->Authenticate(auth_clbk);
+	auto status = authenticator->Authenticate(auth_clbk);
 
 	// Get timestamps saved in callbacks
 	auto face_detection_ts = auth_clbk.GetLastTimeStamp();
@@ -558,8 +558,9 @@ bool RealSenseIDROS::enroll_service(const std::shared_ptr<realsense_id_ros::srv:
 	const size_t color_width  = (size_t) preview_cv_image_.size().width;
 
 	// Enroll a user
+	auto authenticator = create_authenticator(serial_config_);
 	RSEnrollmentCallback enroll_clbk;
-	auto status = authenticator_->Enroll(enroll_clbk, req->id.c_str());
+	auto status = authenticator->Enroll(enroll_clbk, req->id.c_str());
 
 	// Create header
 	std_msgs::msg::Header header;
@@ -593,7 +594,8 @@ bool RealSenseIDROS::remove_user_service(const std::shared_ptr<realsense_id_ros:
 	RCLCPP_INFO(this->get_logger(), "Remove user service request");
 
 	// Remove a user
-	auto status = authenticator_->RemoveUser(req->name.c_str());
+	auto authenticator = create_authenticator(serial_config_);
+	auto status = authenticator->RemoveUser(req->name.c_str());
 	if (status == RealSenseID::Status::Ok){
 		RCLCPP_INFO(this->get_logger(), "User removed successfully");
 		return true;
@@ -609,7 +611,8 @@ bool RealSenseIDROS::remove_all_service(const std::shared_ptr<realsense_id_ros::
 	RCLCPP_INFO(this->get_logger(), "Remove all users service request");
 
 	// Remove all users
-	auto status = authenticator_->RemoveAll();
+	auto authenticator = create_authenticator(serial_config_);
+	auto status = authenticator->RemoveAll();
 	if (status == RealSenseID::Status::Ok){
 		RCLCPP_INFO(this->get_logger(), "Users removed successfully");
 		return true;
@@ -626,7 +629,8 @@ bool RealSenseIDROS::query_users_id_service(const std::shared_ptr<realsense_id_r
 
 	// Get number of users
 	unsigned int number_of_users = 0;
-	auto status = authenticator_->QueryNumberOfUsers(number_of_users);
+	auto authenticator = create_authenticator(serial_config_);
+	auto status = authenticator->QueryNumberOfUsers(number_of_users);
 	if (status != RealSenseID::Status::Ok){
 		RCLCPP_INFO_STREAM(this->get_logger(), "Status: " << status);
 		return false;
@@ -643,7 +647,7 @@ bool RealSenseIDROS::query_users_id_service(const std::shared_ptr<realsense_id_r
 		user_ids[i] = new char[RealSenseID::MAX_USERID_LENGTH];
 	}
 	unsigned int number_of_users_in_out = number_of_users;
-	status = authenticator_->QueryUserIds(user_ids, number_of_users_in_out);
+	status = authenticator->QueryUserIds(user_ids, number_of_users_in_out);
 	if (status != RealSenseID::Status::Ok){
 		RCLCPP_INFO_STREAM(this->get_logger(), "Status: " << status);
 		// Free allocated memory and return on error
@@ -684,10 +688,11 @@ bool RealSenseIDROS::authenticate_faceprints_service(const std::shared_ptr<reals
 	const size_t color_width  = (size_t) preview_cv_image_.size().width;
 
 	// Create callback
-	RSAuthFaceprintsCallback auth_clbk(authenticator_, faceprints_db_.data);
+	auto authenticator = create_authenticator(serial_config_);
+	RSAuthFaceprintsCallback auth_clbk(authenticator.get(), faceprints_db_.data);
 
 	// Extract faceprints of the user in front of the device
-	auto status = authenticator_->ExtractFaceprintsForAuth(auth_clbk);
+	auto status = authenticator->ExtractFaceprintsForAuth(auth_clbk);
 	if (status == RealSenseID::Status::Ok){
 		std::vector<DetectionObject> detections = auth_clbk.GetDetections();
 
@@ -734,7 +739,8 @@ bool RealSenseIDROS::enroll_faceprints_service(const std::shared_ptr<realsense_i
 	RSEnrollFaceprintsCallback enroll_clbk(req->id.c_str(), faceprints_db_.data);
 
 	// Enroll a user
-	auto status = authenticator_->ExtractFaceprintsForEnroll(enroll_clbk);
+	auto authenticator = create_authenticator(serial_config_);
+	auto status = authenticator->ExtractFaceprintsForEnroll(enroll_clbk);
 	if (status == RealSenseID::Status::Ok){
 		std::vector<DetectionObject> detections = enroll_clbk.GetDetections();
 

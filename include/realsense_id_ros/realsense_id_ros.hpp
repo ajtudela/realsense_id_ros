@@ -87,10 +87,10 @@ class RealSenseIDROS: public rclcpp::Node{
 		RSAuthFaceprintsCallback auth_face_clbk_;
 		FaceprintsDatabase faceprints_db_;
 		std::unique_ptr<RealSenseID::Preview> preview_;
-		std::shared_ptr<RealSenseID::FaceAuthenticator> authenticator_;
 
 		void get_params();
 		void update();
+		std::unique_ptr<RealSenseID::FaceAuthenticator> create_authenticator(const RealSenseID::SerialConfig& serial_config);
 		void log_callback(RealSenseID::LogLevel level, const char* msg);
 		rcl_interfaces::msg::SetParametersResult parameters_callback(const std::vector<rclcpp::Parameter> &parameters);
 
