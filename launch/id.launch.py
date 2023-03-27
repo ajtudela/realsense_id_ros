@@ -17,7 +17,7 @@ def generate_launch_description():
     # Getting directories and launch-files
     realsense_id_dir = get_package_share_directory('realsense_id_ros')
     default_params_file = os.path.join(realsense_id_dir, 'params', 'default_params.yaml')
-    default_database_param_file = os.path.join(realsense_id_dir, 'database_filepath', 'faceprints.json')
+    default_database_param_file = os.path.join(realsense_id_dir, 'database', 'faceprints.json')
 
     # Create the launch configuration variables.
     params_file = LaunchConfiguration('params', default=default_params_file)
