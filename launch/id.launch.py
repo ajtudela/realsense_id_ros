@@ -44,7 +44,7 @@ def generate_launch_description():
     # Prepare the laser segmentation node.
     realsense_id_node = Node(
         package = 'realsense_id_ros',
-        namespace = '',
+        namespace = 'realsense_id',
         executable = 'realsense_id_ros_node',
         name = 'realsense_id',
         parameters=[configured_params],
