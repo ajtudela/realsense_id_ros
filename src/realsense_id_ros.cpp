@@ -18,8 +18,8 @@
 #include "sensor_msgs/msg/image.hpp"
 #include "sensor_msgs/image_encodings.hpp"
 #include "sensor_msgs/fill_image.hpp"
+#include "face_msgs/msg/face_array.hpp"
 
-#include "realsense_id_ros/msg/face_array.hpp"
 #include "realsense_id_ros/realsense_id_ros.hpp"
 #include "realsense_id_ros/realsense_server_callbacks.hpp"
 
@@ -38,39 +38,39 @@ RealSenseIDROS::RealSenseIDROS() : Node("realsense_id_ros"){
 						std::bind(&RealSenseIDROS::parameters_callback, this, std::placeholders::_1));
 
 	// Initialize services
-	get_device_info_service_ = this->create_service<realsense_id_ros::srv::DeviceInfo>("device_info", 
+	get_device_info_service_ = this->create_service<face_msgs::srv::DeviceInfo>("device_info", 
 									std::bind(&RealSenseIDROS::get_device_info, this, std::placeholders::_1, std::placeholders::_2));
 	set_camera_info_service_ = this->create_service<sensor_msgs::srv::SetCameraInfo>("set_camera_info", 
 									std::bind(&RealSenseIDROS::set_camera_info, this, std::placeholders::_1, std::placeholders::_2));
 
 	if (!server_mode_){
 		RCLCPP_INFO(this->get_logger(), "Using API in device mode");
-		auth_service_ = this->create_service<realsense_id_ros::srv::Authenticate>("authenticate", 
+		auth_service_ = this->create_service<face_msgs::srv::Authenticate>("authenticate", 
 							std::bind(&RealSenseIDROS::authenticate_service, this, std::placeholders::_1, std::placeholders::_2));
-		enroll_service_ = this->create_service<realsense_id_ros::srv::Enroll>("enroll", 
+		enroll_service_ = this->create_service<face_msgs::srv::Enroll>("enroll", 
 							std::bind(&RealSenseIDROS::enroll_service, this, std::placeholders::_1, std::placeholders::_2));
-		remove_user_service_ = this->create_service<realsense_id_ros::srv::RemoveUser>("remove_user",
+		remove_user_service_ = this->create_service<face_msgs::srv::RemoveUser>("remove_user",
 							std::bind(&RealSenseIDROS::remove_user_service, this, std::placeholders::_1, std::placeholders::_2));
-		remove_all_user_service_ = this->create_service<realsense_id_ros::srv::RemoveAllUsers>("remove_all_users",
+		remove_all_user_service_ = this->create_service<face_msgs::srv::RemoveAllUsers>("remove_all_users",
 							std::bind(&RealSenseIDROS::remove_all_service, this, std::placeholders::_1, std::placeholders::_2));
-		query_users_service_ = this->create_service<realsense_id_ros::srv::QueryUsersId>("query_users_id",
+		query_users_service_ = this->create_service<face_msgs::srv::QueryUsersId>("query_users_id",
 							std::bind(&RealSenseIDROS::query_users_id_service, this, std::placeholders::_1, std::placeholders::_2));
 	}else{
 		RCLCPP_INFO(this->get_logger(), "Using API in server mode");
-		auth_service_ = this->create_service<realsense_id_ros::srv::Authenticate>("authenticate", 
+		auth_service_ = this->create_service<face_msgs::srv::Authenticate>("authenticate", 
 							std::bind(&RealSenseIDROS::authenticate_faceprints_service, this, std::placeholders::_1, std::placeholders::_2));
-		enroll_service_ = this->create_service<realsense_id_ros::srv::Enroll>("enroll", 
+		enroll_service_ = this->create_service<face_msgs::srv::Enroll>("enroll", 
 							std::bind(&RealSenseIDROS::enroll_faceprints_service, this, std::placeholders::_1, std::placeholders::_2));
-		remove_user_service_ = this->create_service<realsense_id_ros::srv::RemoveUser>("remove_user",
+		remove_user_service_ = this->create_service<face_msgs::srv::RemoveUser>("remove_user",
 							std::bind(&RealSenseIDROS::remove_user_faceprints_service, this, std::placeholders::_1, std::placeholders::_2));
-		remove_all_user_service_ = this->create_service<realsense_id_ros::srv::RemoveAllUsers>("remove_all_users",
+		remove_all_user_service_ = this->create_service<face_msgs::srv::RemoveAllUsers>("remove_all_users",
 							std::bind(&RealSenseIDROS::remove_all_faceprints_service, this, std::placeholders::_1, std::placeholders::_2));
-		query_users_service_ = this->create_service<realsense_id_ros::srv::QueryUsersId>("query_users_id",
+		query_users_service_ = this->create_service<face_msgs::srv::QueryUsersId>("query_users_id",
 							std::bind(&RealSenseIDROS::query_users_id_faceprints_service, this, std::placeholders::_1, std::placeholders::_2));
 	}
 
 	// And publishers
-	faces_pub_              = this->create_publisher<realsense_id_ros::msg::FaceArray>("faces", 1);
+	faces_pub_              = this->create_publisher<face_msgs::msg::FaceArray>("faces", 1);
 	image_pub_              = this->create_publisher<sensor_msgs::msg::Image>("image_raw", 10);
 	camera_info_pub_        = this->create_publisher<sensor_msgs::msg::CameraInfo>("camera_info", 1);
 
@@ -237,7 +237,8 @@ void RealSenseIDROS::get_params(){
 }
 
 /* Reconfigure callback. */
-rcl_interfaces::msg::SetParametersResult RealSenseIDROS::parameters_callback(const std::vector<rclcpp::Parameter> &parameters){
+rcl_interfaces::msg::SetParametersResult RealSenseIDROS::parameters_callback(
+											const std::vector<rclcpp::Parameter> &parameters){
 	RCLCPP_INFO(this->get_logger(), "Reconfigure request for RealSenseID");
 	rcl_interfaces::msg::SetParametersResult result;
 	result.successful = true;
@@ -359,7 +360,7 @@ void RealSenseIDROS::log_callback(RealSenseID::LogLevel level, const char* msg){
 /* Publish Faces */
 void RealSenseIDROS::update(){
 	// Create header of FaceArray
-	realsense_id_ros::msg::FaceArray face_array;
+	face_msgs::msg::FaceArray face_array;
 	face_array.header.frame_id = frame_id_;
 	face_array.header.stamp = this->now();
 
@@ -382,7 +383,7 @@ void RealSenseIDROS::update(){
 
 		// Color of the person
 		cv::Scalar color;
-		if (detection.id == realsense_id_ros::msg::Face::SPOOF || detection.id.empty()) color = cv::Scalar(255, 0, 0);
+		if (detection.id == face_msgs::msg::Face::SPOOF || detection.id.empty()) color = cv::Scalar(255, 0, 0);
 		else color = cv::Scalar(0, 255, 0);
 		// Text label
 		std::ostringstream conf;
@@ -423,7 +424,8 @@ void RealSenseIDROS::update(){
 	camera_info_pub_->publish(camera_info_);
 }
 
-std::unique_ptr<RealSenseID::FaceAuthenticator> RealSenseIDROS::create_authenticator(const RealSenseID::SerialConfig& serial_config){
+std::unique_ptr<RealSenseID::FaceAuthenticator> RealSenseIDROS::create_authenticator(
+												const RealSenseID::SerialConfig& serial_config){
 	auto authenticator = std::make_unique<RealSenseID::FaceAuthenticator>();
 	auto connect_status = authenticator->Connect(serial_config);
 	if (connect_status != RealSenseID::Status::Ok){
@@ -438,8 +440,8 @@ std::unique_ptr<RealSenseID::FaceAuthenticator> RealSenseIDROS::create_authentic
 }
 
 /* Get device info. */
-bool RealSenseIDROS::get_device_info(const std::shared_ptr<realsense_id_ros::srv::DeviceInfo::Request> req, 
-								std::shared_ptr<realsense_id_ros::srv::DeviceInfo::Response> res){
+bool RealSenseIDROS::get_device_info(const std::shared_ptr<face_msgs::srv::DeviceInfo::Request> req, 
+								std::shared_ptr<face_msgs::srv::DeviceInfo::Response> res){
 	RCLCPP_INFO(this->get_logger(), "Get device info service request");
 
 	RealSenseID::DeviceController device_controller;
@@ -497,8 +499,8 @@ bool RealSenseIDROS::set_camera_info(const std::shared_ptr<sensor_msgs::srv::Set
 // -------------------- DEVICE MODE ---------------
 
 /* Perform one authentication. */
-bool RealSenseIDROS::authenticate_service(const std::shared_ptr<realsense_id_ros::srv::Authenticate::Request> req,
-									std::shared_ptr<realsense_id_ros::srv::Authenticate::Response> res){
+bool RealSenseIDROS::authenticate_service(const std::shared_ptr<face_msgs::srv::Authenticate::Request> req,
+									std::shared_ptr<face_msgs::srv::Authenticate::Response> res){
 	RCLCPP_INFO(this->get_logger(), "Authenticate service request");
 
 	bool success = false;
@@ -528,7 +530,7 @@ bool RealSenseIDROS::authenticate_service(const std::shared_ptr<realsense_id_ros
 		header.stamp = this->now();
 
 		// Create face array message
-		std::vector<realsense_id_ros::msg::Face> faces;
+		std::vector<face_msgs::msg::Face> faces;
 		for (auto &detection: detections){
 			// Convert to face msg
 			auto face = detection.to_msg(header, preview_cv_image_);
@@ -543,8 +545,8 @@ bool RealSenseIDROS::authenticate_service(const std::shared_ptr<realsense_id_ros
 }
 
 /* Perform one enrollment for one new user. */
-bool RealSenseIDROS::enroll_service(const std::shared_ptr<realsense_id_ros::srv::Enroll::Request> req, 
-									std::shared_ptr<realsense_id_ros::srv::Enroll::Response> res){
+bool RealSenseIDROS::enroll_service(const std::shared_ptr<face_msgs::srv::Enroll::Request> req, 
+									std::shared_ptr<face_msgs::srv::Enroll::Response> res){
 	RCLCPP_INFO(this->get_logger(), "Enroll service request");
 
 	bool success = false;
@@ -568,7 +570,7 @@ bool RealSenseIDROS::enroll_service(const std::shared_ptr<realsense_id_ros::srv:
 		std::vector<DetectionObject> detections = enroll_clbk.GetDetections();
 
 		// Create face array message
-		std::vector<realsense_id_ros::msg::Face> faces;
+		std::vector<face_msgs::msg::Face> faces;
 		for (auto &detection: detections){
 			// Convert to face msg
 			auto face = detection.to_msg(header, preview_cv_image_);
@@ -584,8 +586,8 @@ bool RealSenseIDROS::enroll_service(const std::shared_ptr<realsense_id_ros::srv:
 }
 
 /* Attempt to remove specific user from the device. */
-bool RealSenseIDROS::remove_user_service(const std::shared_ptr<realsense_id_ros::srv::RemoveUser::Request> req, 
-									std::shared_ptr<realsense_id_ros::srv::RemoveUser::Response> res){
+bool RealSenseIDROS::remove_user_service(const std::shared_ptr<face_msgs::srv::RemoveUser::Request> req, 
+									std::shared_ptr<face_msgs::srv::RemoveUser::Response> res){
 	RCLCPP_INFO(this->get_logger(), "Remove user service request");
 
 	// Remove a user
@@ -601,8 +603,8 @@ bool RealSenseIDROS::remove_user_service(const std::shared_ptr<realsense_id_ros:
 }
 
 /* Attempt to remove all users from the device. */
-bool RealSenseIDROS::remove_all_service(const std::shared_ptr<realsense_id_ros::srv::RemoveAllUsers::Request> req, 
-									std::shared_ptr<realsense_id_ros::srv::RemoveAllUsers::Response> res){
+bool RealSenseIDROS::remove_all_service(const std::shared_ptr<face_msgs::srv::RemoveAllUsers::Request> req, 
+									std::shared_ptr<face_msgs::srv::RemoveAllUsers::Response> res){
 	RCLCPP_INFO(this->get_logger(), "Remove all users service request");
 
 	// Remove all users
@@ -618,8 +620,8 @@ bool RealSenseIDROS::remove_all_service(const std::shared_ptr<realsense_id_ros::
 }
 
 /* Query the device about all enrolled users. */
-bool RealSenseIDROS::query_users_id_service(const std::shared_ptr<realsense_id_ros::srv::QueryUsersId::Request> req, 
-									std::shared_ptr<realsense_id_ros::srv::QueryUsersId::Response> res){
+bool RealSenseIDROS::query_users_id_service(const std::shared_ptr<face_msgs::srv::QueryUsersId::Request> req, 
+									std::shared_ptr<face_msgs::srv::QueryUsersId::Response> res){
 	RCLCPP_INFO(this->get_logger(), "Query users id service request");
 
 	// Get number of users
@@ -671,8 +673,8 @@ bool RealSenseIDROS::query_users_id_service(const std::shared_ptr<realsense_id_r
 // -------------------- SERVER MODE ---------------
 
 /* Perform one authentication in server mode. */
-bool RealSenseIDROS::authenticate_faceprints_service(const std::shared_ptr<realsense_id_ros::srv::Authenticate::Request> req, 
-								std::shared_ptr<realsense_id_ros::srv::Authenticate::Response> res){
+bool RealSenseIDROS::authenticate_faceprints_service(const std::shared_ptr<face_msgs::srv::Authenticate::Request> req, 
+								std::shared_ptr<face_msgs::srv::Authenticate::Response> res){
 	RCLCPP_INFO(this->get_logger(), "Authenticate faceprints service request");
 
 	bool success = false;
@@ -699,7 +701,7 @@ bool RealSenseIDROS::authenticate_faceprints_service(const std::shared_ptr<reals
 		header.stamp = this->now();
 
 		// Create face array message
-		std::vector<realsense_id_ros::msg::Face> faces;
+		std::vector<face_msgs::msg::Face> faces;
 		for (auto &detection: detections){
 			// Convert to face msg
 			auto face = detection.to_msg(header, preview_cv_image_);
@@ -714,8 +716,8 @@ bool RealSenseIDROS::authenticate_faceprints_service(const std::shared_ptr<reals
 }
 
 /* Perform one enrollment for one new user in server mode. */
-bool RealSenseIDROS::enroll_faceprints_service(const std::shared_ptr<realsense_id_ros::srv::Enroll::Request> req, 
-								std::shared_ptr<realsense_id_ros::srv::Enroll::Response> res){
+bool RealSenseIDROS::enroll_faceprints_service(const std::shared_ptr<face_msgs::srv::Enroll::Request> req, 
+								std::shared_ptr<face_msgs::srv::Enroll::Response> res){
 	RCLCPP_INFO(this->get_logger(), "Enroll faceprints service request");
 
 	bool success = false;
@@ -739,7 +741,7 @@ bool RealSenseIDROS::enroll_faceprints_service(const std::shared_ptr<realsense_i
 		header.stamp = this->now();
 
 		// Create face array message
-		std::vector<realsense_id_ros::msg::Face> faces;
+		std::vector<face_msgs::msg::Face> faces;
 		for (auto &detection: detections){
 			// Convert to face msg
 			auto face = detection.to_msg(header, preview_cv_image_);
@@ -758,8 +760,8 @@ bool RealSenseIDROS::enroll_faceprints_service(const std::shared_ptr<realsense_i
 }
 
 /* Attempt to remove specific user from the database. */
-bool RealSenseIDROS::remove_user_faceprints_service(const std::shared_ptr<realsense_id_ros::srv::RemoveUser::Request> req, 
-								std::shared_ptr<realsense_id_ros::srv::RemoveUser::Response> res){
+bool RealSenseIDROS::remove_user_faceprints_service(const std::shared_ptr<face_msgs::srv::RemoveUser::Request> req, 
+								std::shared_ptr<face_msgs::srv::RemoveUser::Response> res){
 	RCLCPP_INFO(this->get_logger(), "Remove user faceprint service request");
 
 	// Remove a user
@@ -774,8 +776,8 @@ bool RealSenseIDROS::remove_user_faceprints_service(const std::shared_ptr<realse
 }
 
 /* Attempt to remove all users from the database. */
-bool RealSenseIDROS::remove_all_faceprints_service(const std::shared_ptr<realsense_id_ros::srv::RemoveAllUsers::Request> req, 
-								std::shared_ptr<realsense_id_ros::srv::RemoveAllUsers::Response> res){
+bool RealSenseIDROS::remove_all_faceprints_service(const std::shared_ptr<face_msgs::srv::RemoveAllUsers::Request> req, 
+								std::shared_ptr<face_msgs::srv::RemoveAllUsers::Response> res){
 	RCLCPP_INFO(this->get_logger(), "Remove all users faceprints service request");
 
 	// Delete database
@@ -784,8 +786,8 @@ bool RealSenseIDROS::remove_all_faceprints_service(const std::shared_ptr<realsen
 }
 
 /* Query the device about all enrolled users in server mode. */
-bool RealSenseIDROS::query_users_id_faceprints_service(const std::shared_ptr<realsense_id_ros::srv::QueryUsersId::Request> req, 
-								std::shared_ptr<realsense_id_ros::srv::QueryUsersId::Response> res){
+bool RealSenseIDROS::query_users_id_faceprints_service(const std::shared_ptr<face_msgs::srv::QueryUsersId::Request> req, 
+								std::shared_ptr<face_msgs::srv::QueryUsersId::Response> res){
 	RCLCPP_INFO(this->get_logger(), "Query users id faceprints service request");
 
 	// Create response

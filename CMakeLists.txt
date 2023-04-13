@@ -23,36 +23,13 @@ find_package(sensor_msgs REQUIRED)
 find_package(vision_msgs REQUIRED)
 find_package(nav2_util REQUIRED)
 find_package(cv_bridge REQUIRED)
+find_package(face_msgs REQUIRED)
 find_package(rsid "0.25.0" EXACT REQUIRED PATHS "/opt/RealSenseID/lib64/cmake")
 
 # RealSense ID
 SET(rsid_INCLUDE_DIRS "/opt/RealSenseID/include")
 SET(rsid_LIBS_DIRS "/opt/RealSenseID/lib64")
 FIND_LIBRARY(rsid_LIBRARIES rsid ${rsid_LIBS_DIRS})
-
-################################################
-## Declare ROS messages, services and actions ##
-################################################
-set(msg_files
-  "msg/Face.msg"
-  "msg/FaceArray.msg"
-)
-set(srv_files
-  "srv/Authenticate.srv"
-  "srv/DeviceInfo.srv"
-  "srv/Enroll.srv"
-  "srv/RemoveUser.srv"
-  "srv/RemoveAllUsers.srv"
-  "srv/QueryUsersId.srv"
-  "srv/StartAuthenticationLoop.srv"
-  "srv/StopAuthenticationLoop.srv"
-)
-
-rosidl_generate_interfaces(${PROJECT_NAME}
-  ${msg_files}
-  ${srv_files}
-  DEPENDENCIES builtin_interfaces std_msgs sensor_msgs vision_msgs
-)
 
 ###########
 ## Build ##
@@ -76,14 +53,11 @@ ament_target_dependencies(realsense_id_ros_node
   vision_msgs
   cv_bridge
   nav2_util
+  face_msgs
 )
 target_link_libraries(realsense_id_ros_node
   ${rsid_LIBRARIES}
-  #${cpp_typesupport_target} # Add if Humble
 )
-# Deprecated as of Humble. Fix with the comment below
-rosidl_target_interfaces(realsense_id_ros_node ${PROJECT_NAME} "rosidl_typesupport_cpp") # Remove if Humble
-#rosidl_get_typesupport_target(cpp_typesupport_target "${PROJECT_NAME}" "rosidl_typesupport_cpp") # Add if Humble
 
 #############
 ## Install ##

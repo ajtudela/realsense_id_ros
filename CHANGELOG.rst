@@ -2,6 +2,10 @@
 Changelog for package realsense_id_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.2.0 (13-04-2023)
+------------------
+* Split messages and services in different package.
+
 2.1.0 (07-03-2023)
 ------------------
 * Remove authenticate loop due to stability issues.
