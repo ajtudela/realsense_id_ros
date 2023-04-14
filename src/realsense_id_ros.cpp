@@ -593,7 +593,7 @@ bool RealSenseIDROS::remove_user_service(const std::shared_ptr<face_msgs::srv::R
 
 	// Remove a user
 	auto authenticator = create_authenticator(serial_config_);
-	auto status = authenticator->RemoveUser(req->name.c_str());
+	auto status = authenticator->RemoveUser(req->id.c_str());
 	if (status == RealSenseID::Status::Ok){
 		RCLCPP_INFO(this->get_logger(), "User removed successfully");
 		return true;
@@ -767,7 +767,7 @@ bool RealSenseIDROS::remove_user_faceprints_service(const std::shared_ptr<face_m
 	RCLCPP_INFO(this->get_logger(), "Remove user faceprint service request");
 
 	// Remove a user
-	auto status = faceprints_db_.remove_user(req->name.c_str());
+	auto status = faceprints_db_.remove_user(req->id.c_str());
 	if (status){
 		RCLCPP_INFO(this->get_logger(), "User removed successfully");
 		return true;
