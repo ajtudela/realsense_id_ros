@@ -102,7 +102,7 @@ Camera node to perform facial recognition.
 
 * **`enroll`** ([face_msgs/Enroll])
 
-	Perform one enrollment for one new user on the device or on the server. Returns an array of faces with image of the faces. For example, you can trigger the computation from the console with
+	Perform one enrollment for one new user on the device or on the server. Returns a face with the bounding box and the name of the user. For example, you can trigger the computation from the console with
 
 		ros2 interface call /realsense_id_ros_node/enroll
 
