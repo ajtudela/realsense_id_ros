@@ -578,7 +578,8 @@ bool RealSenseIDROS::enroll_service(const std::shared_ptr<face_msgs::srv::Enroll
 			faces.push_back(face);
 		}
 
-		res->faces = faces;
+		// Return the first face
+		res->face = faces.front();
 		success = true;
 	}
 
@@ -749,7 +750,8 @@ bool RealSenseIDROS::enroll_faceprints_service(const std::shared_ptr<face_msgs::
 			faces.push_back(face);
 		}
 
-		res->faces = faces;
+		// Return the first face
+		res->face = faces.front();
 		success = true;
 	}
 
