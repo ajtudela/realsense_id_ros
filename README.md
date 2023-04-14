@@ -31,6 +31,7 @@ The realsense_id_ros package has been tested under [ROS2] Galactic on [Ubuntu] 2
 
 - [Robot Operating System (ROS) 2](https://docs.ros.org/en/galactic/) (middleware for robotics),
 - [Intel RealSense ID SDK v0.25](https://github.com/IntelRealSense/RealSenseID)
+- [face_msgs](https://github.com/grupo-avispa/face_msgs) (Messsages and services for face recognition)
 
 Build the Intel RealSense ID SDK as follows:
 
