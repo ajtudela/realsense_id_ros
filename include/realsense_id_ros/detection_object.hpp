@@ -37,7 +37,7 @@ struct DetectionObject{
 		// Header, id and confidence
 		face.header = header;
 		face.id = id;
-		face.confidence = confidence;
+		face.score = confidence;
 		face.has_mask = has_mask;
 
 		// Resize the bounding box if it is out of the image

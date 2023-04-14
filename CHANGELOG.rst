@@ -6,6 +6,7 @@ Changelog for package realsense_id_ros
 ------------------
 * Only response with one face when enroll.
 * Replace name with id when remove a user to maintain consistency.
+* Replace confidence with score.
 
 2.2.0 (13-04-2023)
 ------------------
