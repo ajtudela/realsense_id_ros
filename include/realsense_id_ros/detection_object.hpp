@@ -45,8 +45,8 @@ struct DetectionObject{
 		height = ((y + height) > image.size().height) ? (image.size().height - y) : height;
 
 		// 2D bounding box surrounding the object
-		face.bbox.center.x = x + width / 2;
-		face.bbox.center.y = y + height / 2;
+		face.bbox.center.position.x = x + width / 2;
+		face.bbox.center.position.y = y + height / 2;
 		face.bbox.size_x = width;
 		face.bbox.size_y = height;
 

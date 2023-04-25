@@ -2,6 +2,11 @@
 Changelog for package realsense_id_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.3.0 (25-04-2023)
+------------------
+* Change detection_object to support new vision_msgs.
+* Prepare for humble release.
+
 2.2.1 (14-04-2023)
 ------------------
 * Only response with one face when enroll.

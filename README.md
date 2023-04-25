@@ -1,6 +1,6 @@
 # realsense_id_ros
 
-![ROS2](https://img.shields.io/badge/ros2-galactic-purple?logo=ros&logoColor=white)
+![ROS2](https://img.shields.io/badge/ros2-humble-blue?logo=ros&logoColor=white)
 ![License](https://img.shields.io/badge/license-Apache%202-blue)
 
 ## Overview
@@ -21,7 +21,7 @@ The source code is released under a [Apache license 2.0](LICENSE).
 
 **Author: Alberto Tudela<br />**
 
-The realsense_id_ros package has been tested under [ROS2] Galactic on [Ubuntu] 20.04. This is research code, expect that it changes often and any fitness for a particular purpose is disclaimed.
+The realsense_id_ros package has been tested under [ROS2] Humble on [Ubuntu] 22.04. This is research code, expect that it changes often and any fitness for a particular purpose is disclaimed.
 
 ## Installation
 
@@ -29,7 +29,7 @@ The realsense_id_ros package has been tested under [ROS2] Galactic on [Ubuntu] 2
 
 #### Dependencies
 
-- [Robot Operating System (ROS) 2](https://docs.ros.org/en/galactic/) (middleware for robotics),
+- [Robot Operating System (ROS) 2](https://docs.ros.org/en/humble/) (middleware for robotics),
 - [Intel RealSense ID SDK v0.25](https://github.com/IntelRealSense/RealSenseID)
 - [face_msgs](https://github.com/grupo-avispa/face_msgs) (Messages and services for face recognition)
 
@@ -55,9 +55,9 @@ After, Intel RealsenseID permissions script from root directory:
 To build from source, clone the latest version from this repository into your colcon workspace and compile the package using
 
 	cd colcon_workspace/src
-	git clone https://github.com/ajtudela/realsense_id_ros.git -b galactic
+	git clone https://github.com/ajtudela/realsense_id_ros.git -b humble
 	cd ../
-	rosdep install -i --from-path src --rosdistro galactic -y
+	rosdep install -i --from-path src --rosdistro humble -y
 	colcon build --symlink-install
 
 ## Usage
@@ -179,9 +179,9 @@ Camera node to perform facial recognition.
 
 [Intel RealSense ID]: https://www.intelrealsense.com/facial-authentication/
 [Ubuntu]: https://ubuntu.com/
-[ROS2]: https://docs.ros.org/en/galactic/
-[sensor_msgs/CameraInfo]: http://docs.ros2.org/galactic/api/sensor_msgs/msg/CameraInfo.html
-[sensor_msgs/Image]: http://docs.ros2.org/galactic/api/sensor_msgs/msg/Image.html
+[ROS2]: https://docs.ros.org/en/humble/
+[sensor_msgs/CameraInfo]: http://docs.ros2.org/humble/api/sensor_msgs/msg/CameraInfo.html
+[sensor_msgs/Image]: http://docs.ros2.org/humble/api/sensor_msgs/msg/Image.html
 [face_msgs/FaceArray]: https://github.com/grupo-avispa/face_msgs/blob/-/msg/FaceArray.msg
 [face_msgs/Authenticate]: https://github.com/grupo-avispa/face_msgs/blob/-/srv/Authenticate.srv
 [face_msgs/DeviceInfo]: https://github.com/grupo-avispa/face_msgs/blob/-/srv/DeviceInfo.srv
