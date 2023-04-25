@@ -2,6 +2,16 @@
 Changelog for package realsense_id_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.2.1 (14-04-2023)
+------------------
+* Only response with one face when enroll.
+* Replace name with id when remove a user to maintain consistency.
+* Replace confidence with score.
+
+2.2.0 (13-04-2023)
+------------------
+* Split messages and services in different package.
+
 2.1.0 (07-03-2023)
 ------------------
 * Remove authenticate loop due to stability issues.

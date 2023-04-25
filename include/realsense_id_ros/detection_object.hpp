@@ -22,7 +22,7 @@
 // ROS
 #include "std_msgs/msg/header.hpp"
 
-#include "realsense_id_ros/msg/face.hpp"
+#include "face_msgs/msg/face.hpp"
 
 struct DetectionObject{
 	size_t x, y, width, height;
@@ -31,13 +31,13 @@ struct DetectionObject{
 	bool has_mask;
 
 	/* Create a Face msg */
-	realsense_id_ros::msg::Face to_msg(const std_msgs::msg::Header & header, const cv::Mat & image){
-		realsense_id_ros::msg::Face face;
+	face_msgs::msg::Face to_msg(const std_msgs::msg::Header & header, const cv::Mat & image){
+		face_msgs::msg::Face face;
 
 		// Header, id and confidence
 		face.header = header;
 		face.id = id;
-		face.confidence = confidence;
+		face.score = confidence;
 		face.has_mask = has_mask;
 
 		// Resize the bounding box if it is out of the image
@@ -49,15 +49,6 @@ struct DetectionObject{
 		face.bbox.center.y = y + height / 2;
 		face.bbox.size_x = width;
 		face.bbox.size_y = height;
-
-		// The 2D data that generated these results
-		if (!image.empty()){
-			cv_bridge::CvImage output_msg;
-			output_msg.header = header;
-			output_msg.encoding = sensor_msgs::image_encodings::RGB8;
-			output_msg.image = cv::Mat(image, cv::Rect(x, y, width, height));
-			face.source_img = *output_msg.toImageMsg();
-		}
 
 		return face;
 	}

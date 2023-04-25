@@ -34,15 +34,13 @@
 #include "sensor_msgs/srv/set_camera_info.hpp"
 #include "rcl_interfaces/msg/set_parameters_result.hpp"
 
-#include "realsense_id_ros/msg/face_array.hpp"
-#include "realsense_id_ros/srv/authenticate.hpp"
-#include "realsense_id_ros/srv/device_info.hpp"
-#include "realsense_id_ros/srv/enroll.hpp"
-#include "realsense_id_ros/srv/query_users_id.hpp"
-#include "realsense_id_ros/srv/remove_user.hpp"
-#include "realsense_id_ros/srv/remove_all_users.hpp"
-#include "realsense_id_ros/srv/start_authentication_loop.hpp"
-#include "realsense_id_ros/srv/stop_authentication_loop.hpp"
+#include "face_msgs/msg/face_array.hpp"
+#include "face_msgs/srv/authenticate.hpp"
+#include "face_msgs/srv/device_info.hpp"
+#include "face_msgs/srv/enroll.hpp"
+#include "face_msgs/srv/query_users_id.hpp"
+#include "face_msgs/srv/remove_user.hpp"
+#include "face_msgs/srv/remove_all_users.hpp"
 
 #include "realsense_id_ros/realsense_callbacks.hpp"
 #include "realsense_id_ros/realsense_server_callbacks.hpp"
@@ -54,20 +52,18 @@ class RealSenseIDROS: public rclcpp::Node{
 		~RealSenseIDROS();
 
 	private:
-		rclcpp::Publisher<realsense_id_ros::msg::FaceArray>::SharedPtr faces_pub_;
+		rclcpp::Publisher<face_msgs::msg::FaceArray>::SharedPtr faces_pub_;
 		rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr image_pub_;
 		rclcpp::Publisher<sensor_msgs::msg::CameraInfo>::SharedPtr camera_info_pub_;
 
-		rclcpp::Service<realsense_id_ros::srv::DeviceInfo>::SharedPtr get_device_info_service_;
+		rclcpp::Service<face_msgs::srv::DeviceInfo>::SharedPtr get_device_info_service_;
 		rclcpp::Service<sensor_msgs::srv::SetCameraInfo>::SharedPtr set_camera_info_service_;
-		rclcpp::Service<realsense_id_ros::srv::StartAuthenticationLoop>::SharedPtr start_auth_loop_service_;
-		rclcpp::Service<realsense_id_ros::srv::StopAuthenticationLoop>::SharedPtr stop_auth_loop_service_;
 
-		rclcpp::Service<realsense_id_ros::srv::Authenticate>::SharedPtr auth_service_;
-		rclcpp::Service<realsense_id_ros::srv::Enroll>::SharedPtr enroll_service_;
-		rclcpp::Service<realsense_id_ros::srv::RemoveUser>::SharedPtr remove_user_service_;
-		rclcpp::Service<realsense_id_ros::srv::RemoveAllUsers>::SharedPtr remove_all_user_service_;
-		rclcpp::Service<realsense_id_ros::srv::QueryUsersId>::SharedPtr query_users_service_;
+		rclcpp::Service<face_msgs::srv::Authenticate>::SharedPtr auth_service_;
+		rclcpp::Service<face_msgs::srv::Enroll>::SharedPtr enroll_service_;
+		rclcpp::Service<face_msgs::srv::RemoveUser>::SharedPtr remove_user_service_;
+		rclcpp::Service<face_msgs::srv::RemoveAllUsers>::SharedPtr remove_all_user_service_;
+		rclcpp::Service<face_msgs::srv::QueryUsersId>::SharedPtr query_users_service_;
 
 		OnSetParametersCallbackHandle::SharedPtr callback_handle_;
 
@@ -94,34 +90,34 @@ class RealSenseIDROS: public rclcpp::Node{
 		void log_callback(RealSenseID::LogLevel level, const char* msg);
 		rcl_interfaces::msg::SetParametersResult parameters_callback(const std::vector<rclcpp::Parameter> &parameters);
 
-		bool get_device_info(const std::shared_ptr<realsense_id_ros::srv::DeviceInfo::Request> req, 
-								std::shared_ptr<realsense_id_ros::srv::DeviceInfo::Response> res);
+		bool get_device_info(const std::shared_ptr<face_msgs::srv::DeviceInfo::Request> req, 
+								std::shared_ptr<face_msgs::srv::DeviceInfo::Response> res);
 		bool set_camera_info(const std::shared_ptr<sensor_msgs::srv::SetCameraInfo::Request> req, 
 								std::shared_ptr<sensor_msgs::srv::SetCameraInfo::Response> res);
 
 		// Services - Device mode
-		bool authenticate_service(const std::shared_ptr<realsense_id_ros::srv::Authenticate::Request> req,
-									std::shared_ptr<realsense_id_ros::srv::Authenticate::Response> res);
-		bool enroll_service(const std::shared_ptr<realsense_id_ros::srv::Enroll::Request> req, 
-									std::shared_ptr<realsense_id_ros::srv::Enroll::Response> res);
-		bool remove_user_service(const std::shared_ptr<realsense_id_ros::srv::RemoveUser::Request> req, 
-									std::shared_ptr<realsense_id_ros::srv::RemoveUser::Response> res);
-		bool remove_all_service(const std::shared_ptr<realsense_id_ros::srv::RemoveAllUsers::Request> req, 
-									std::shared_ptr<realsense_id_ros::srv::RemoveAllUsers::Response> res);
-		bool query_users_id_service(const std::shared_ptr<realsense_id_ros::srv::QueryUsersId::Request> req, 
-									std::shared_ptr<realsense_id_ros::srv::QueryUsersId::Response> res);
+		bool authenticate_service(const std::shared_ptr<face_msgs::srv::Authenticate::Request> req,
+									std::shared_ptr<face_msgs::srv::Authenticate::Response> res);
+		bool enroll_service(const std::shared_ptr<face_msgs::srv::Enroll::Request> req, 
+									std::shared_ptr<face_msgs::srv::Enroll::Response> res);
+		bool remove_user_service(const std::shared_ptr<face_msgs::srv::RemoveUser::Request> req, 
+									std::shared_ptr<face_msgs::srv::RemoveUser::Response> res);
+		bool remove_all_service(const std::shared_ptr<face_msgs::srv::RemoveAllUsers::Request> req, 
+									std::shared_ptr<face_msgs::srv::RemoveAllUsers::Response> res);
+		bool query_users_id_service(const std::shared_ptr<face_msgs::srv::QueryUsersId::Request> req, 
+									std::shared_ptr<face_msgs::srv::QueryUsersId::Response> res);
 
 		// Services - Host mode
-		bool authenticate_faceprints_service(const std::shared_ptr<realsense_id_ros::srv::Authenticate::Request> req, 
-								std::shared_ptr<realsense_id_ros::srv::Authenticate::Response> res);
-		bool enroll_faceprints_service(const std::shared_ptr<realsense_id_ros::srv::Enroll::Request> req, 
-								std::shared_ptr<realsense_id_ros::srv::Enroll::Response> res);
-		bool remove_user_faceprints_service(const std::shared_ptr<realsense_id_ros::srv::RemoveUser::Request> req, 
-								std::shared_ptr<realsense_id_ros::srv::RemoveUser::Response> res);
-		bool remove_all_faceprints_service(const std::shared_ptr<realsense_id_ros::srv::RemoveAllUsers::Request> req, 
-								std::shared_ptr<realsense_id_ros::srv::RemoveAllUsers::Response> res);
-		bool query_users_id_faceprints_service(const std::shared_ptr<realsense_id_ros::srv::QueryUsersId::Request> req, 
-								std::shared_ptr<realsense_id_ros::srv::QueryUsersId::Response> res);
+		bool authenticate_faceprints_service(const std::shared_ptr<face_msgs::srv::Authenticate::Request> req, 
+								std::shared_ptr<face_msgs::srv::Authenticate::Response> res);
+		bool enroll_faceprints_service(const std::shared_ptr<face_msgs::srv::Enroll::Request> req, 
+								std::shared_ptr<face_msgs::srv::Enroll::Response> res);
+		bool remove_user_faceprints_service(const std::shared_ptr<face_msgs::srv::RemoveUser::Request> req, 
+								std::shared_ptr<face_msgs::srv::RemoveUser::Response> res);
+		bool remove_all_faceprints_service(const std::shared_ptr<face_msgs::srv::RemoveAllUsers::Request> req, 
+								std::shared_ptr<face_msgs::srv::RemoveAllUsers::Response> res);
+		bool query_users_id_faceprints_service(const std::shared_ptr<face_msgs::srv::QueryUsersId::Request> req, 
+								std::shared_ptr<face_msgs::srv::QueryUsersId::Response> res);
 };
 
 #endif  // REALSENSE_ID_ROS__REALSENSE_ID_HPP_

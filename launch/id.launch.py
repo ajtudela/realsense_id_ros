@@ -17,7 +17,7 @@ def generate_launch_description():
     # Getting directories and launch-files
     realsense_id_dir = get_package_share_directory('realsense_id_ros')
     default_params_file = os.path.join(realsense_id_dir, 'params', 'default_params.yaml')
-    default_database_param_file = os.path.join(realsense_id_dir, 'database_filepath', 'faceprints.json')
+    default_database_param_file = os.path.join(realsense_id_dir, 'database', 'faceprints.json')
 
     # Create the launch configuration variables.
     params_file = LaunchConfiguration('params', default=default_params_file)
@@ -44,7 +44,7 @@ def generate_launch_description():
     # Prepare the laser segmentation node.
     realsense_id_node = Node(
         package = 'realsense_id_ros',
-        namespace = '',
+        namespace = 'realsense_id',
         executable = 'realsense_id_ros_node',
         name = 'realsense_id',
         parameters=[configured_params],
