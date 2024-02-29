@@ -1,3 +1,8 @@
+# Warning: Deprecated/no longer maintained! 
+**As of February 29th, 20240, realsense_id_ros is no longer maintained, and no further changes will be made to it (including security-related changes).**
+
+Since the Intel [announcement](https://www.intel.com/content/www/us/en/support/articles/000087450/emerging-technologies/intel-realsense-technology.html) of the end of life for the RealSense ID product, the official support for the RealSense ID SDK has been discontinued. As a result, the realsense_id_ros package is no longer maintained.
+
 # realsense_id_ros
 
 ![ROS2](https://img.shields.io/badge/ros2-humble-blue?logo=ros&logoColor=white)
